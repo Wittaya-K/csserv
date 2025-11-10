@@ -250,7 +250,7 @@
                                     </div>
 
                                     @if (Auth::user()->roles->contains('title', 'Staff') == true || Auth::user()->roles->contains('title', 'Admin') == true)
-                                    <div class="col-lg-6 col-12">
+                                    <!-- <div class="col-lg-6 col-12">
                                         <div class="form-group">
                                             <label class="col-sm-12 control-label">สถานะคำขอ</label>
                                             <div class="input-group mb-3">
@@ -268,7 +268,7 @@
                                                 </select>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> -->
                                     @endif
                                 </div>
                             </div>
