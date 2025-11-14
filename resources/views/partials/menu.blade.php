@@ -99,15 +99,7 @@
                             </li>
                         @endcan
                         @can('service_list_access')
-                            {{-- <li class="nav-item">
-                                <a href="{{ route('admin.service_lists.index') }}"
-                                    class="nav-link {{ request()->is('admin/service_lists') || request()->is('admin/service_lists/*') ? 'active' : '' }}">
-                                    <i class="fad fa-chevron-circle-right"></i>
-                                    <p>
-                                        <span>รายการคำขอ</span>
-                                    </p>
-                                </a>
-                            </li> --}}
+
                         @endcan
                     </ul>
                 </li>
@@ -123,15 +115,7 @@
                     </a>
                     <ul class="nav nav-treeview">
                         @can('search_access')
-                            <li class="nav-item">
-                                <a href="{{ route('admin.search.index') }}"
-                                    class="nav-link {{ request()->is('admin/search') || request()->is('admin/search/*') ? 'active' : '' }}">
-                                    <i class="fad fa-chevron-circle-right"></i>
-                                    <p>
-                                        <span>ค้นหา</span>
-                                    </p>
-                                </a>
-                            </li>
+
                         @endcan
                         @can('search_access')
                             <li class="nav-item">
@@ -196,51 +180,7 @@
                     </li>
                 @endcan
                 @can('system_access')
-                {{-- <li class="nav-header">ระบบ</li> --}}
-                {{-- <li class="nav-item has-treeview">
-                    <a class="nav-link nav-dropdown-toggle">
-                        <i class="fad fa-cogs"></i>
-                        <p>
-                            <span>ระบบ</span>
-                            <i class="right fa fa-angle-left"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        @can('schedule_access')
-                            <li class="nav-item">
-                                <a href=""
-                                    class="nav-link">
-                                    <i class="fad fa-chevron-circle-right"></i>
-                                    <p>
-                                        <span>ข้อมูลกิจกรรมผู้ใช้</span>
-                                    </p>
-                                </a>
-                            </li>
-                        @endcan
-                        @can('schedule_access')
-                            <li class="nav-item">
-                                <a href=""
-                                    class="nav-link ">
-                                    <i class="fad fa-chevron-circle-right"></i>
-                                    <p>
-                                        <span>ข้อมูลการเข้าถึง</span>
-                                    </p>
-                                </a>
-                            </li>
-                        @endcan
-                        @can('schedule_access')
-                            <li class="nav-item">
-                                <a href=""
-                                    class="nav-link ">
-                                    <i class="fad fa-chevron-circle-right"></i>
-                                    <p>
-                                        <span>ข้อมูลกิจกรรมระบบ</span>
-                                    </p>
-                                </a>
-                            </li>
-                        @endcan
-                    </ul>
-                </li> --}}
+
                 @endcan
             </ul>
         </nav>
