@@ -33,6 +33,7 @@ Route::get('/auth/redirect', function () {
 });
 
 Route::get('/auth/callback', function () {
+    // azure sociallite driver
     // $azureUser = Socialite::driver('azure')->user();
     $azureUser = Socialite::driver('azure')
     ->stateless()
@@ -42,7 +43,7 @@ Route::get('/auth/callback', function () {
     // dd($azureUser);
     // $businessPhones = $azureUser->user['businessPhones'];
     $displayName = $azureUser->user['displayName'];
-    // $givenName = $azureUser->user['givenName'];
+    $givenName = $azureUser->user['givenName'];
     // $jobTitle = $azureUser->user['jobTitle'];
     $mail = $azureUser->user['mail'];
     // $mobilePhone = $azureUser->user['mobilePhone'];
@@ -67,10 +68,12 @@ Route::get('/auth/callback', function () {
 });
 
 Route::get('/logout-azure', function () {
+    
     // Logout Laravel session
     Auth::logout();
     session()->invalidate();
     session()->regenerateToken();
+
     // Logout Microsoft
     // $redirect = urlencode('https://csserv.dev.psu.ac.th:8000/');
     // return redirect("https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri={$redirect}");
