@@ -155,6 +155,41 @@ class LoginController extends Controller
                     } // end foreach
                 }
             }
+
+
+        //DC1(VM),2(RACK),7(VM)-Hatyai,DC3(RACK)-Pattani,DC5(RACK)-Surat,DC6(RACK)-Trang
+        $server = array("dc2.psu.ac.th","dc7.psu.ac.th","dc1.psu.ac.th");
+        $basedn = "dc=psu,dc=ac,dc=th";
+        $domain = "psu.ac.th";
+        $username = $_POST['username'];
+        $password = $_POST['password'];
+        //Call function authentication
+        $ldap = $this->authenticate($server,$basedn,$domain,$username,$password);
+        if($ldap[0]){
+            echo "<br/>>> User Profile <<<br/>";
+            echo "Account Name : ".$ldap[1]['accountname']."<br/>";
+            echo "Employee ID/Student ID : ".$ldap[1]['personid']."<br/>";
+            echo "Citizen ID : ".$ldap[1]['citizenid']."<br/>";
+            echo "CN : ".$ldap[1]['cn']."<br/>";
+            echo "DN : ".$ldap[1]['dn']."<br/>";
+            echo "Campus : ".$ldap[1]['campus']."(".$ldap[1]['campusid'].")<br/>";
+            echo "Department : ".$ldap[1]['department']."(".$ldap[1]['departmentid'].")<br/>";
+            echo "Work Detail : ".$ldap[1]['workdetail']."<br/>";
+            echo "Position ID : ".$ldap[1]['positionid']."<br/>";
+            echo "Description : ".$ldap[1]['description']."<br/>";
+            echo "Display Name : ".$ldap[1]['displayname']."<br/>";
+            echo "Detail : ".$ldap[1]['detail']."<br/>";
+            echo "Title Name : ".$ldap[1]['title']."(".$ldap[1]['titleid'].")<br/>";
+            echo "First Name : ".$ldap[1]['firstname']."<br/>";
+            echo "Last Name : ".$ldap[1]['lastname']."<br/>";
+            echo "Sex : ".$ldap[1]['sex']."<br/>";
+            echo "Mail : ".$ldap[1]['mail']."<br/>";
+            echo "Other Mail : ".$ldap[1]['othermail']."<br/>";
+        }else{
+            echo "This area is restricted.<br>";
+            echo "Please login to continue.<br>";
+        }
+
         } catch (Throwable $th) {
             return redirect()->to('/login')->with('error', 'ไม่มีสิทธิ์เข้าใช้งาน');
         }
@@ -200,7 +235,7 @@ class LoginController extends Controller
         $auth_status = false;
         $i = 0;
         while (($i < count($server)) && ($auth_status == false)) {
-            $ldap = ldap_connect("ldap://" . $server[$i]) or
+            $ldap = ldap_connect("ldaps://" . $server[$i]) or
                 $auth_status = false;
             ldap_set_option($ldap, LDAP_OPT_REFERRALS, 0);
             ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);

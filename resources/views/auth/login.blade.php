@@ -7,7 +7,6 @@
         }
 
         .bg-image {
-            /*background-image: url('https://bootstrapious.com/i/snippets/sn-page-split/bg.jpg');*/
             background-image: url(/image/login.jpg);
             background-size: cover;
             background-position: center center;
@@ -34,7 +33,7 @@
                             @endif
                                 <form action="{{ route('login') }}" method="POST">
                                     {{ csrf_field() }}
-                                    <div class="form-group mb-3">
+                                    <div class="form-group mb-3" hidden>
                                         <input type="text" placeholder="PSU Passport Account Name" name="username"
                                             autofocus="" class="form-control rounded-pill border-0 shadow-sm px-4 @error('username') is-invalid @enderror">
                                         @error('username')
@@ -43,7 +42,7 @@
                                             </div>
                                         @enderror
                                     </div>
-                                    <div class="form-group mb-3">
+                                    <div class="form-group mb-3" hidden>
                                         <input type="password" placeholder="Password" name="password"
                                             class="form-control rounded-pill border-0 shadow-sm px-4 text-primary @error('password') is-invalid @enderror">
                                         @error('password')
@@ -52,10 +51,10 @@
                                             </div>
                                         @enderror
                                     </div>
-                                    <button type="submit" class="btn btn-primary btn-block text-uppercase mb-2 rounded-pill shadow-sm"><i class="fad fa-sign-in"></i> {{ trans('global.login') }}</button>
-                                    {{-- <a href="{{ url('/auth/redirect') }}" class="btn btn-primary btn-block text-uppercase mb-2 rounded-pill shadow-sm">
+                                    <button type="submit" class="btn btn-primary btn-block text-uppercase mb-2 rounded-pill shadow-sm" hidden><i class="fad fa-sign-in"></i> {{ trans('global.login') }}</button>
+                                    <a href="{{ url('/auth/redirect') }}" class="btn btn-primary btn-block text-uppercase mb-2 rounded-pill shadow-sm" style="background-color: white;">
                                         <i class="fad fa-sign-in"></i> เข้าสู่ระบบด้วย PSU Passport
-                                    </a> --}}
+                                    </a>
                                 </form>
                             </div>
                         </div>

@@ -17,12 +17,12 @@ use Illuminate\Http\Request;
 Route::redirect('/', '/login');
 
 // Authentication Routes...
-Route::get('login', 'Auth\LoginController@showLoginForm')->name('auth.login');
-Route::post('login', 'Auth\LoginController@login')->name('auth.login');
-Route::post('logout', 'Auth\LoginController@logout')->name('auth.logout');
+// Route::get('login', 'Auth\LoginController@showLoginForm')->name('auth.login');
+// Route::post('login', 'Auth\LoginController@login')->name('auth.login');
+// Route::post('logout', 'Auth\LoginController@logout')->name('auth.logout');
 
-Route::get('auth/psu', [PSUAuthController::class, 'redirectToPSU'])->name('auth.psu');
-Route::get('auth/callback', [PSUAuthController::class, 'handlePSUCallback']);
+// Route::get('auth/psu', [PSUAuthController::class, 'redirectToPSU'])->name('auth.psu');
+// Route::get('auth/callback', [PSUAuthController::class, 'handlePSUCallback']);
 
 Route::redirect('/home', '/admin');
 
@@ -32,85 +32,51 @@ Route::get('/auth/redirect', function () {
     return Socialite::driver('azure')->redirect();
 });
 
-// Route::get('/auth/callback', function () {
-//     $azureUser = Socialite::driver('azure')->user();
-//     $businessPhones = $azureUser->user['businessPhones'];
-//     $displayName = $azureUser->user['displayName'];
-//     $givenName = $azureUser->user['givenName'];
-//     $jobTitle = $azureUser->user['jobTitle'];
-//     $mail = $azureUser->user['mail'];
-//     $mobilePhone = $azureUser->user['mobilePhone'];
-//     $officeLocation = $azureUser->user['officeLocation'];
-//     $preferredLanguage = $azureUser->user['preferredLanguage'];
-//     $surname = $azureUser->user['surname'];
-//     $userPrincipalName = $azureUser->user['userPrincipalName'];
-//     $id = $azureUser->user['id'];
-//     $email = $azureUser->attributes['email'];
+Route::get('/auth/callback', function () {
+    // $azureUser = Socialite::driver('azure')->user();
+    $azureUser = Socialite::driver('azure')
+    ->stateless()
+    ->setHttpClient(new \GuzzleHttp\Client(['verify' => false]))
+    ->user();
 
-//     // dd($email);
-//     // dd($azureUser);
-//     // ตัวอย่างดึง email
-//     //   user [
-//     //     "@odata.context" => "https://graph.microsoft.com/v1.0/$metadata#users/$entity"
-//     //     "businessPhones" => []
-//     //     "displayName" => "Wittaya Khuanwilai (วิทยา ควรวิไลย)"
-//     //     "givenName" => "WITTAYA"
-//     //     "jobTitle" => "นักวิชาการคอมพิวเตอร์"
-//     //     "mail" => "wittaya.kh@psu.ac.th"
-//     //     "mobilePhone" => null
-//     //     "officeLocation" => "สาขาวิชาวิทยาศาสตร์การคำนวณ คณะวิทยาศาสตร์"
-//     //     "preferredLanguage" => "en-us"
-//     //     "surname" => "KHUANWILAI"
-//     //     "userPrincipalName" => "wittaya.kh@psu.ac.th"
-//     //     "id" => "741e91b3-cf47-492c-a39d-644e0c3e8c51"
-//     //   ]
-//     //   attributes [
-//     //     "id" => "741e91b3-cf47-492c-a39d-644e0c3e8c51"
-//     //     "nickname" => null
-//     //     "name" => "Wittaya Khuanwilai (วิทยา ควรวิไลย)"
-//     //     "email" => "wittaya.kh@psu.ac.th"
-//     //     "principalName" => "wittaya.kh@psu.ac.th"
-//     //     "mail" => "wittaya.kh@psu.ac.th"
-//     //     "avatar" => null
-//     //   ]
+    // dd($azureUser);
+    // $businessPhones = $azureUser->user['businessPhones'];
+    $displayName = $azureUser->user['displayName'];
+    // $givenName = $azureUser->user['givenName'];
+    // $jobTitle = $azureUser->user['jobTitle'];
+    $mail = $azureUser->user['mail'];
+    // $mobilePhone = $azureUser->user['mobilePhone'];
+    $officeLocation = $azureUser->user['officeLocation'];
+    // $preferredLanguage = $azureUser->user['preferredLanguage'];
+    // $surname = $azureUser->user['surname'];
+    // $userPrincipalName = $azureUser->user['userPrincipalName'];
+    // $id = $azureUser->user['id'];
+    $email = $azureUser->attributes['email'];
 
-//     $user = User::updateOrCreate([
-//         'email' => $azureUser->email,
-//     ], [
-//         'name' => $azureUser->displayName,
-//         'email' => $azureUser->email,
-//         'username' => explode('@', $azureUser->getEmail()) ?? null,
-//         'department_name' => $azureUser->jobTitle,
-//     ]);
+    $user = User::updateOrCreate([
+        'email' => $mail,
+    ], [
+        'name' => $displayName,
+        'email' => $mail,
+        'username' => explode('@', $mail) ?? null,
+        'department_name' => $officeLocation
+    ]);
 
-//     Auth::login($user);
-//     return redirect('/admin');
-// });
+    Auth::login($user);
+    return redirect('/admin');
+});
 
-// Route::get('/logout', function (Request $request) {
-//     // (1) ดึง id_token ที่บันทึกตอน login (ถ้ามี)
-//     $idToken = $request->session()->pull('azure_id_token');
+Route::get('/logout-azure', function () {
+    // Logout Laravel session
+    Auth::logout();
+    session()->invalidate();
+    session()->regenerateToken();
+    // Logout Microsoft
+    // $redirect = urlencode('https://csserv.dev.psu.ac.th:8000/');
+    // return redirect("https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri={$redirect}");
+    return redirect("https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri=" . urlencode(config('app.url')));
 
-//     // (2) ออกจากระบบ Laravel
-//     Auth::logout();
-//     $request->session()->invalidate();
-//     $request->session()->regenerateToken();
-
-//     // (3) เตรียม URL Logout ของ Microsoft
-//     $tenant   = config('services.azure.tenant_id');  // หรือ 'common'
-//     $base     = "https://login.microsoftonline.com/{$tenant}/oauth2/v2.0/logout";
-
-//     // post_logout_redirect_uri ต้องถูก “ลงทะเบียน” ใน Azure → App > Authentication
-//     $params = [
-//         'post_logout_redirect_uri' => url('/'),
-//         // ส่ง id_token_hint จะช่วย Azure รู้ว่า session ไหนต้องปิด (ไม่บังคับ)
-//         'id_token_hint'            => $idToken,
-//     ];
-//     $logoutUrl = $base.'?'.http_build_query($params);
-
-//     // (4) Redirect ผู้ใช้ไป Azure เพื่อลบ SSO คุกกี้
-//     return redirect()->away($logoutUrl);
-// });
+});
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'middleware' => ['auth']], function () {
     Route::get('/', 'HomeController@index')->name('home');
