@@ -79,6 +79,7 @@
                 @endcan
                 {{-- <li class="nav-header">บริการ</li> --}}
                 <li class="nav-item has-treeview {{ request()->is('admin/service_requests*') ? 'menu-open' : '' }}  {{ request()->is('admin/service_lists*') ? 'menu-open' : '' }}">
+                    @can('service_request_access')
                     <a class="nav-link nav-dropdown-toggle">
                         <i class="fad fa-user-headset"></i>
                         <p>
@@ -86,6 +87,7 @@
                             <i class="right fa fa-angle-left"></i>
                         </p>
                     </a>
+                     @endcan
                     <ul class="nav nav-treeview">
                         @can('service_request_access')
                             <li class="nav-item">

@@ -52,14 +52,15 @@ Route::get('/auth/callback', function () {
     // $surname = $azureUser->user['surname'];
     // $userPrincipalName = $azureUser->user['userPrincipalName'];
     // $id = $azureUser->user['id'];
-    $email = $azureUser->attributes['email'];
-
+    // $email = $azureUser->attributes['email'];
+    $explodeMail = explode('@', $mail);
+    // dd($explodeMail[0]);
     $user = User::updateOrCreate([
         'email' => $mail,
     ], [
         'name' => $displayName,
         'email' => $mail,
-        'username' => explode('@', $mail) ?? null,
+        'username' => $explodeMail[0],
         'department_name' => $officeLocation
     ]);
 
