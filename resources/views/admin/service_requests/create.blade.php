@@ -486,9 +486,19 @@
                 },
                 success: function(response) {
                     if (response.status) {
-                        Swal.fire("Success", response.message, "success");
-                        show_schedule();
-                        $('#modal_schedule_form').modal('hide');
+                        Swal.fire({
+                            title: "Success",
+                            text: response.message,
+                            icon: "success"
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.history.back();
+                            }
+                        });
+                        // Swal.fire("Success", response.message, "success");
+                        // window.history.back();
+                        // show_schedule();
+                        // $('#modal_schedule_form').modal('hide');
                     } else {
                         console.log(response);
                     }

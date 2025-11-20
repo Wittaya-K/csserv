@@ -47,6 +47,7 @@ class HomeController
             ];
         });
 
+        $serviceRequests = null;
         // ตรวจสอบสิทธิ์การเข้าถึง
 		$roles = Auth::user()->roles;
 		foreach ($roles as $role) {

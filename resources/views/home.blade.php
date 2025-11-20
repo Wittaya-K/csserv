@@ -341,6 +341,18 @@
                                             <a id="download" href="#"></a>
                                         </div>
                                     </div>
+                                    <div class="col-lg-6 col-12">
+                                        <div class="form-group">
+                                            <label class="col-sm-12 control-label">วันที่ต้องการ</label>
+                                            <div class="input-group mb-3">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fad fa-keyboard"></i></span>
+                                                </div>
+                                                <input type="text" class="form-control" name="serviceDueDate"
+                                                    id="serviceDueDate" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                             </div>
@@ -443,7 +455,9 @@
             let today = new Date().toISOString().slice(0, 10) //วันที่ปัจจุบัน
             // console.log(today)
             let Color;
+            @if ($serviceRequests != null)
                 @foreach ($serviceRequests as $serviceRequest)
+                $('#serviceDueDate').val('{{ $serviceRequest->serviceDateTime }}');
                 if (formatDate("{{ $serviceRequest->serviceDateTime }}") < today) {
                     Color = '#343a40';
                 } else {
@@ -507,7 +521,8 @@
                     allDay: true,
                 }
                 events.push(event_item)
-            @endforeach
+                @endforeach
+            @endif
 
             var calendar = new Calendar(calendarEl, {
                 headerToolbar: {

@@ -8,13 +8,13 @@ php artisan cache:clear
 
 
 DELETE FROM service_request;
-ALTER TABLE service_request AUTO_INCREMENT = 1;
+ALTER TABLE service_request AUTO_INCREMENT = 0;
 
 DELETE FROM service_provider;
-ALTER TABLE service_provider AUTO_INCREMENT = 1;
+ALTER TABLE service_provider AUTO_INCREMENT = 0;
 
 DELETE FROM service_request_note;
-ALTER TABLE service_request_note AUTO_INCREMENT = 1;
+ALTER TABLE service_request_note AUTO_INCREMENT = 0;
 
 DELETE FROM service_request_history;
-ALTER TABLE service_request_history AUTO_INCREMENT = 1;
+ALTER TABLE service_request_history AUTO_INCREMENT = 0;

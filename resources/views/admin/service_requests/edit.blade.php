@@ -448,7 +448,7 @@
                     textarea.style.height = textarea.scrollHeight + 'px'; // ขยายตามเนื้อหา
                 }
             });
-
+            $('#serviceDueDate').val('{{ $serviceDueDate }}');
             $('#serviceRequestMessage').val('');
 
             $("#serviceName").select2({

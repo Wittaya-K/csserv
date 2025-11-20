@@ -122,7 +122,7 @@ class ServiceRequestController extends Controller
         $serviceDateTime  = Carbon::parse($serviceRequests->serviceDateTime);
         $updated_at  = Carbon::parse($serviceRequests->updated_at);
         $dayAmounts = $serviceDateTime->diffInDays($updated_at);
-
+        $serviceDueDate = $serviceRequests->serviceDateTime; // วันที่ต้องการใช้บริการ
         if($dayAmounts <= 1){
             $priorityName = 'ด่วนที่สุด';
         }elseif($dayAmounts <= 3){
@@ -153,7 +153,7 @@ class ServiceRequestController extends Controller
 
         $requestId = $serviceRequest->serviceRequestNumber;
 
-		return view('admin.service_requests.edit',compact('departments','service_assigns','requestId','prioritys','users','servicesStatus','serviceRequests','chatTitle','serviceRequestHistory','ServiceRequestMessages','serviceRequestHistoryServiceName','priorityName','serviceRequestHistoryDayAmountsPriorityName','fullName'));
+		return view('admin.service_requests.edit',compact('departments','service_assigns','requestId','prioritys','users','servicesStatus','serviceRequests','chatTitle','serviceRequestHistory','ServiceRequestMessages','serviceRequestHistoryServiceName','priorityName','serviceRequestHistoryDayAmountsPriorityName','fullName','serviceDueDate'));
 	}
 
     public function view($id){
@@ -259,32 +259,6 @@ class ServiceRequestController extends Controller
 				$serviceRequest = ServiceRequest::where('serviceRecipient','=',Auth::user()->username)->get();
 			}
 		}
-
-        // foreach ($serviceRequest as $serviceRequestsItem) {
-        //     $id = $serviceRequestsItem->id;
-        //     $serviceRequest = serviceRequest::where('id','=',$id)->orderByDesc('id')->first();
-
-        //     // หาจำนวนวันที่ผ่านไปตั้งแต่วันที่บันทึกประวัติการให้บริการจาก service_request
-        //     $serviceDateTime  = Carbon::parse($serviceRequestsItem->serviceDateTime);
-        //     $updated_at  = Carbon::parse($serviceRequestsItem->updated_at);
-        //     $dayAmounts = $serviceDateTime->diffInDays($updated_at);
-
-        //     if($dayAmounts <= 1){
-        //         $priorityName = 'ด่วนที่สุด';
-        //     }elseif($dayAmounts <= 3){
-        //         $priorityName = 'ด่วนมาก';
-        //     }elseif($dayAmounts <= 7){
-        //         $priorityName = 'ด่วน';
-        //     }elseif($dayAmounts <= 14){
-        //         $priorityName = 'ปกติ';
-        //     }elseif($dayAmounts <= 30){
-        //         $priorityName = 'ปกติ';
-        //     }elseif($dayAmounts <= 60){
-        //         $priorityName = 'ปกติ';
-        //     }
-        // }
-
-        // dd($priorityName);
 		return response()->json(['status' => true, 'data' => $serviceRequest ]);
 	}
 
@@ -357,7 +331,7 @@ class ServiceRequestController extends Controller
 							'serviceDepartment' => $departmentName->id, // หน่วยงานที่ให้บริการ
 							'serviceDepartmentType' => $departmentType, // หน่วยงานภายในหรือภายนอก
 							'serviceFileUpload' => $fileName, // ไฟล์แนบ
-							'serviceStatus' => 'inprogress', // สถานะคำขอ
+							'serviceStatus' => 'pending', // สถานะคำขอ
 							'serviceDateTime' => Carbon::now(),
 							'servicePriority' => null, // ชั้นความเร็ว
 							'serviceRecipient' => $request->input('serviceRecipient'), // ผู้ใช้บริการ
@@ -380,7 +354,7 @@ class ServiceRequestController extends Controller
 						'serviceDepartment' => $request->input('serviceDepartment'),
 						'serviceDepartmentType' => $departmentName->departmentType,
 						'serviceFileUpload' => $fileName,
-						'serviceStatus' => 'inprogress',
+						'serviceStatus' => 'pending',
 						'serviceDateTime' => Carbon::now(),
 						'servicePriority' => null,
 						'serviceRecipient' => $request->input('serviceRecipient'),
@@ -426,7 +400,7 @@ class ServiceRequestController extends Controller
 					'serviceDepartment' => $departmentName->departmentName,
 					'serviceDepartmentType' => $departmentName->departmentType,
 					'serviceFileUpload' => $fileName,
-					'serviceStatus' 	=> 'inprogress',
+					'serviceStatus' 	=> 'pending',
 					'serviceDateTime' 	=> Carbon::now(),
 					'servicePriority' 	=> null,
 					'serviceRecipient' 	=> $request->input('serviceRecipient'),
@@ -540,7 +514,7 @@ class ServiceRequestController extends Controller
 							'serviceDepartment' => $departmentName->id, // หน่วยงานที่ให้บริการ
 							'serviceDepartmentType' => $departmentType, // หน่วยงานภายในหรือภายนอก
 							'serviceFileUpload' => $fileName, // ไฟล์แนบ
-							'serviceStatus' => 'inprogress', // สถานะคำขอ
+							'serviceStatus' => 'pending', // สถานะคำขอ
 							'serviceDateTime' => Carbon::now(),
 							'servicePriority' => null, // ชั้นความเร็ว
 							'serviceRecipient' => $request->input('serviceRecipient'), // ผู้ใช้บริการ
@@ -579,7 +553,7 @@ class ServiceRequestController extends Controller
 						'serviceDepartment' => $request->input('serviceDepartment'),
 						'serviceDepartmentType' => $departmentName->departmentType,
 						'serviceFileUpload' => $fileName,
-						'serviceStatus' => 'inprogress',
+						'serviceStatus' => 'pending',
 						'serviceDateTime' => Carbon::now(),
 						'servicePriority' => null,
 						'serviceRecipient' => $request->input('serviceRecipient'),
@@ -600,7 +574,7 @@ class ServiceRequestController extends Controller
 					'serviceDepartment' => $departmentName->departmentName,
 					'serviceDepartmentType' => $departmentName->departmentType,
 					'serviceFileUpload' => $fileName,
-					'serviceStatus' 	=> 'inprogress',
+					'serviceStatus' 	=> 'pending',
 					'serviceDateTime' 	=> Carbon::now(),
 					'servicePriority' 	=> null,
 					'serviceRecipient' 	=> $request->input('serviceRecipient'),
