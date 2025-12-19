@@ -31,7 +31,7 @@
                                     {{ \Session::get('message') }}
                                 </p>
                             @endif
-                                <form action="{{ route('login') }}" method="POST">
+                                <!-- <form action="{{ route('login') }}" method="POST">
                                     {{ csrf_field() }}
                                     <div class="form-group mb-3">
                                         <input type="text" placeholder="PSU Passport Account Name" name="username"
@@ -51,11 +51,11 @@
                                             </div>
                                         @enderror
                                     </div>
-                                    <button type="submit" class="btn btn-primary btn-block text-uppercase mb-2 rounded-pill shadow-sm" hidden><i class="fad fa-sign-in"></i> {{ trans('global.login') }}</button>
-                                    <a href="{{ url('/auth/redirect') }}" class="btn btn-primary btn-block text-uppercase mb-2 rounded-pill shadow-sm" style="background-color: white;" hidden>
-                                        <i class="fad fa-sign-in"></i> เข้าสู่ระบบด้วย PSU Passport
-                                    </a>
-                                </form>
+                                <button type="submit" class="btn btn-primary btn-block text-uppercase mb-2 rounded-pill shadow-sm"><i class="fad fa-sign-in"></i> {{ trans('global.login') }}</button>
+                                </form> -->
+                                <a href="{{ url('/auth/redirect') }}" class="btn btn-primary btn-block text-uppercase mb-2 rounded-pill shadow-sm" style="background-color: white;">
+                                    <i class="fad fa-sign-in"></i> เข้าสู่ระบบด้วย PSU Passport
+                                </a>
                             </div>
                         </div>
                     </div>
