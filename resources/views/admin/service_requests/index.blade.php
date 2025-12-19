@@ -164,7 +164,7 @@
                         render: function(data, type, row, meta) {
                             newdata = '';
                             @if (Auth::user()->roles->contains('title', 'Staff') == true || Auth::user()->roles->contains('title', 'Admin') == true)
-                                newdata +='<span class="right badge badge-danger">ใหม่</span>';
+                                // newdata +='<span class="right badge badge-danger">ใหม่</span>';
                             @endif
                             return newdata;
                         }
