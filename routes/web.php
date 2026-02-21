@@ -17,9 +17,9 @@ use Illuminate\Http\Request;
 Route::redirect('/', '/login');
 
 // Authentication Routes...
-// Route::get('login', 'Auth\LoginController@showLoginForm')->name('auth.login');
-// Route::post('login', 'Auth\LoginController@login')->name('auth.login');
-// Route::post('logout', 'Auth\LoginController@logout')->name('auth.logout');
+Route::get('login', 'Auth\LoginController@showLoginForm')->name('auth.login');
+Route::post('login', 'Auth\LoginController@login')->name('auth.login');
+Route::post('logout', 'Auth\LoginController@logout')->name('auth.logout');
 
 // Route::get('auth/psu', [PSUAuthController::class, 'redirectToPSU'])->name('auth.psu');
 // Route::get('auth/callback', [PSUAuthController::class, 'handlePSUCallback']);
@@ -28,59 +28,59 @@ Route::redirect('/home', '/admin');
 
 Auth::routes(['register' => false]);
 
-Route::get('/auth/redirect', function () {
-    return Socialite::driver('azure')->redirect();
-});
+// Route::get('/auth/redirect', function () {
+//     return Socialite::driver('azure')->redirect();
+// });
 
-Route::get('/auth/callback', function () {
-    // azure sociallite driver
-    // $azureUser = Socialite::driver('azure')->user();
-    $azureUser = Socialite::driver('azure')
-    ->stateless()
-    ->setHttpClient(new \GuzzleHttp\Client(['verify' => false]))
-    ->user();
+// Route::get('/auth/callback', function () {
+//     // azure sociallite driver
+//     // $azureUser = Socialite::driver('azure')->user();
+//     $azureUser = Socialite::driver('azure')
+//     ->stateless()
+//     ->setHttpClient(new \GuzzleHttp\Client(['verify' => false]))
+//     ->user();
 
-    // dd($azureUser);
-    // $businessPhones = $azureUser->user['businessPhones'];
-    $displayName = $azureUser->user['displayName'];
-    $givenName = $azureUser->user['givenName'];
-    // $jobTitle = $azureUser->user['jobTitle'];
-    $mail = $azureUser->user['mail'];
-    // $mobilePhone = $azureUser->user['mobilePhone'];
-    $officeLocation = $azureUser->user['officeLocation'];
-    // $preferredLanguage = $azureUser->user['preferredLanguage'];
-    // $surname = $azureUser->user['surname'];
-    // $userPrincipalName = $azureUser->user['userPrincipalName'];
-    // $id = $azureUser->user['id'];
-    // $email = $azureUser->attributes['email'];
-    $explodeMail = explode('@', $mail);
-    // dd($explodeMail[0]);
-    $user = User::updateOrCreate([
-        'email' => $mail,
-    ], [
-        'name' => $displayName,
-        'email' => $mail,
-        'username' => $explodeMail[0],
-        'department_name' => $officeLocation
-    ]);
+//     // dd($azureUser);
+//     // $businessPhones = $azureUser->user['businessPhones'];
+//     $displayName = $azureUser->user['displayName'];
+//     $givenName = $azureUser->user['givenName'];
+//     // $jobTitle = $azureUser->user['jobTitle'];
+//     $mail = $azureUser->user['mail'];
+//     // $mobilePhone = $azureUser->user['mobilePhone'];
+//     $officeLocation = $azureUser->user['officeLocation'];
+//     // $preferredLanguage = $azureUser->user['preferredLanguage'];
+//     // $surname = $azureUser->user['surname'];
+//     // $userPrincipalName = $azureUser->user['userPrincipalName'];
+//     // $id = $azureUser->user['id'];
+//     // $email = $azureUser->attributes['email'];
+//     $explodeMail = explode('@', $mail);
+//     // dd($explodeMail[0]);
+//     $user = User::updateOrCreate([
+//         'email' => $mail,
+//     ], [
+//         'name' => $displayName,
+//         'email' => $mail,
+//         'username' => $explodeMail[0],
+//         'department_name' => $officeLocation
+//     ]);
 
-    Auth::login($user);
-    return redirect('/admin');
-});
+//     Auth::login($user);
+//     return redirect('/admin');
+// });
 
-Route::get('/logout-azure', function () {
+// Route::get('/logout-azure', function () {
     
-    // Logout Laravel session
-    Auth::logout();
-    session()->invalidate();
-    session()->regenerateToken();
+//     // Logout Laravel session
+//     Auth::logout();
+//     session()->invalidate();
+//     session()->regenerateToken();
 
-    // Logout Microsoft
-    // $redirect = urlencode('https://csserv.dev.psu.ac.th:8000/');
-    // return redirect("https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri={$redirect}");
-    return redirect("https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri=" . urlencode(config('app.url')));
+//     // Logout Microsoft
+//     // $redirect = urlencode('https://csserv.dev.psu.ac.th:8000/');
+//     // return redirect("https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri={$redirect}");
+//     return redirect("https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri=" . urlencode(config('app.url')));
 
-});
+// });
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'middleware' => ['auth']], function () {
     Route::get('/', 'HomeController@index')->name('home');

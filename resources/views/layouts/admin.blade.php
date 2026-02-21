@@ -89,13 +89,13 @@
                             <i class="fad fa-envelope"></i> เมล์: {{ Auth::user()->email }}
                         </a>
                         <div class="dropdown-divider"></div>
-                        <!-- <a href="#" class="dropdown-item"
+                        <a href="#" class="dropdown-item"
                             onclick="event.preventDefault(); document.getElementById('logoutform').submit();">
                             <i class="fad fa-sign-out"></i> ออกจากระบบ
-                        </a> -->
-                        <a href="{{ url('/logout-azure') }}" class="dropdown-item">
-                            <i class="fad fa-sign-out"></i> ออกจากระบบ
                         </a>
+                        {{-- <a href="{{ url('/logout-azure') }}" class="dropdown-item">
+                            <i class="fad fa-sign-out"></i> ออกจากระบบ
+                        </a> --}}
                     </div>
                 </li>
             </ul>
