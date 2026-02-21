@@ -49,15 +49,32 @@ class LoginController extends Controller
     public function login(Request $request)
     {
 
-        $username = $request->input('username'); //ชื่อผู้ใช้
-        $password = $request->input('password'); //รหัสผ่าน
+        $input = $request->input('username');
+        $password = $request->input('password');
 
-        $fieldType = filter_var($username, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-        if (auth()->attempt(array($fieldType => $username, 'password' => $request->input('password')))) {
+        // ถ้าไม่มี @ แสดงว่าเป็น username ให้เติม @psu.ac.th
+        if (!str_contains($input, '@')) {
+            $email = $input . '@psu.ac.th';
+        } else {
+            // เป็น email อยู่แล้ว ใช้ได้เลย
+            $email = $input;
+        }
+
+        if (auth()->attempt(['email' => $email, 'password' => $password])) {
             return redirect('/admin');
         } else {
             return redirect()->to('/login')->with('error', 'Username หรือ Password ไม่ถูกต้อง กรุณา Login ใหม่อีกครั้ง!');
         }
+        
+        // $username = $request->input('username'); //ชื่อผู้ใช้
+        // $password = $request->input('password'); //รหัสผ่าน
+        // $username = $username . "@psu.ac.th";
+        // $fieldType = filter_var($username, FILTER_VALIDATE_EMAIL) ? 'email' : 'email';
+        // if (auth()->attempt(array($fieldType => $username, 'password' => $request->input('password')))) {
+        //     return redirect('/admin');
+        // } else {
+        //     return redirect()->to('/login')->with('error', 'Username หรือ Password ไม่ถูกต้อง กรุณา Login ใหม่อีกครั้ง!');
+        // }
 
         // try {
         //     $username = $request->input('username'); //ชื่อผู้ใช้
