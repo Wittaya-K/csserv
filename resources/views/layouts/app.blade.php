@@ -9,7 +9,7 @@
 
     <title>{{ trans('global.system') }}</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="/css/adminltev3.css" rel="stylesheet" />
+    <link href="{{ asset('css/adminltev3.css') }}" rel="stylesheet" />
     <link href="{{ asset('font-awesome-pro-5.15.4/css/all.min.css') }}" rel="stylesheet" />
     <style> 
         @font-face {
