@@ -64,12 +64,6 @@
                                 </a> --}}
                             </div>
                         </div>
-                        {{-- <div class="row">
-                            <div class="col-lg-10 col-xl-7 mx-auto">
-                                <h6 class="display-5 text-center" style="padding-top: 60%;">ติดต่อ: wittaya.kh@psu.ac.th</h6>
-                                <p class="text-muted mb-4 text-center">wittaya.kh@psu.ac.th</p>
-                            </div>
-                        </div> --}}
                     </div>
                 </div>
             </div>
