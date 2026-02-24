@@ -181,48 +181,6 @@
                 })
             });
 
-            /*------------------------------------------
-            --------------------------------------------
-            Create
-            --------------------------------------------
-            --------------------------------------------*/
-            // $('#saveBtn').click(function(e) {
-            //     e.preventDefault();
-            //     let url = $(this).attr('action');
-            //     let formData = new FormData(this); // use 'this' directly to refer to the HTML form element
-            //     if ($('#departmentName').val() == '') {
-            //         Swal.fire({
-            //             title: "แจ้งเตือน!",
-            //             text: "กรุณาระบุชื่อหน่วยงาน!",
-            //             icon: "warning"
-            //         });
-            //     } else if ($('#departmentType').val() == '') {
-            //         Swal.fire({
-            //             title: "แจ้งเตือน!",
-            //             text: "กรุณาระบุประเภทหน่วยงาน!",
-            //             icon: "warning"
-            //         });
-            //     }
-
-            //     $.ajax({
-            //         data: $('#department_Form').serialize(),
-            //         url: "{{ route('admin.departments.store') }}",
-            //         type: "POST",
-            //         dataType: 'json',
-            //         success: function(data) {
-
-            //             $('#department_Form').trigger("reset");
-            //             $('#ajaxModel').modal('hide');
-            //             table.draw();
-
-            //         },
-            //         error: function(data) {
-            //             console.log('Error:', data);
-            //             $('#saveBtn').html('บันทึก');
-            //         }
-            //     });
-            // });
-
             $('#saveBtn').click(function(e) {
                 e.preventDefault();
 

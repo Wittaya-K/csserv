@@ -11,6 +11,7 @@
             background-size: cover;
             background-position: center center;
         }
+
         #lblcustomeCheck1 {
             padding-left: 20px;
         }
@@ -26,16 +27,17 @@
                             <div class="col-lg-10 col-xl-7 mx-auto">
                                 <h4 class="display-5 text-center">ระบบขอใช้บริการ</h4>
                                 <p class="text-muted mb-4 text-center">กรุณาลงชื่อเพื่อใช้งานระบบ</p>
-                            @if (\Session::has('message'))
-                                <p class="alert alert-info">
-                                    {{ \Session::get('message') }}
-                                </p>
-                            @endif
+                                @if (\Session::has('message'))
+                                    <p class="alert alert-info">
+                                        {{ \Session::get('message') }}
+                                    </p>
+                                @endif
                                 <form action="{{ route('login') }}" method="POST">
                                     {{ csrf_field() }}
                                     <div class="form-group mb-3">
                                         <input type="text" placeholder="PSU Passport Account Name" name="username"
-                                            autofocus="" class="form-control rounded-pill border-0 shadow-sm px-4 @error('username') is-invalid @enderror">
+                                            autofocus=""
+                                            class="form-control rounded-pill border-0 shadow-sm px-4 @error('username') is-invalid @enderror">
                                         @error('username')
                                             <div class="invalid-feedback">
                                                 {{ $message }}
@@ -51,13 +53,23 @@
                                             </div>
                                         @enderror
                                     </div>
-                                <button type="submit" class="btn btn-primary btn-block text-uppercase mb-2 rounded-pill shadow-sm"><i class="fad fa-sign-in"></i> {{ trans('global.login') }}</button>
+                                    <button type="submit"
+                                        class="btn btn-primary btn-block text-uppercase mb-2 rounded-pill shadow-sm"><i
+                                            class="fad fa-sign-in"></i> {{ trans('global.login') }}</button>
                                 </form>
-                                {{-- <a href="{{ url('/auth/redirect') }}" class="btn btn-primary btn-block text-uppercase mb-2 rounded-pill shadow-sm" style="background-color: white;">
+                                {{-- <a href="{{ url('/auth/redirect') }}"
+                                    class="btn btn-primary btn-block text-uppercase mb-2 rounded-pill shadow-sm"
+                                    style="background-color: white;">
                                     <i class="fad fa-sign-in"></i> เข้าสู่ระบบด้วย PSU Passport
                                 </a> --}}
                             </div>
                         </div>
+                        {{-- <div class="row">
+                            <div class="col-lg-10 col-xl-7 mx-auto">
+                                <h6 class="display-5 text-center" style="padding-top: 60%;">ติดต่อ: wittaya.kh@psu.ac.th</h6>
+                                <p class="text-muted mb-4 text-center">wittaya.kh@psu.ac.th</p>
+                            </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>
