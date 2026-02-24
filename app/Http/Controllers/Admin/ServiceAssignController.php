@@ -59,7 +59,7 @@ class ServiceAssignController extends Controller
         }else{
             $schedule = ServiceAssign::updateOrCreate(
                 [
-                    'id' => $request->input('service_assign_id'),
+                    'id' => $request->input('service_request_id'),
                 ],
                 [
                 'serviceName' => $request->serviceName,

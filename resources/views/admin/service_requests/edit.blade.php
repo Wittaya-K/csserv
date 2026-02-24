@@ -264,7 +264,8 @@
                                 <div class="btcd-f-input">
                                     <label class="col-sm-12 control-label">ไฟล์ (PDF, JPG, PNG, EXCEL,
                                         WORD)</label>
-                                    <div class="btcd-f-wrp">
+                                    <input type="file" name="serviceFileUpload" id="serviceFileUpload" {{ $serviceRequests->serviceRecipient != Auth()->user()->username ? 'disabled' : '' }}>
+                                    {{-- <div class="btcd-f-wrp">
                                         <button class="btcd-inpBtn" type="button"> <img src="" alt="">
                                             <span>
                                                 เลือกไฟล์</span></button>
@@ -274,7 +275,7 @@
                                             {{ $serviceRequests->serviceRecipient != Auth()->user()->username ? 'disabled' : '' }}>
                                     </div>
                                     <div class="btcd-files">
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
 
