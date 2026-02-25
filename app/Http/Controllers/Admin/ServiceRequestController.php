@@ -286,7 +286,7 @@ class ServiceRequestController extends Controller
 			// $priorityName = Priority::where('priorityStatus','=',$request->input('servicePriority'))->orderBy('id')->first();
 			$serviceName = DB::table('service_assign')->where('id','=',$request->input('serviceName'))->orderBy('id')->first();
 
-
+			
 			if($request->file('serviceFileUpload') != null){
 				$file = $request->file('serviceFileUpload');
 				// Check if multiple files are uploaded
@@ -304,6 +304,9 @@ class ServiceRequestController extends Controller
 				} else {
 					// Single file upload
 					$fileName = $file->getClientOriginalName();
+					$path = public_path('uploads' . $fileName);
+					$file->move(public_path('uploads'), $fileName);
+					$path = public_path('uploads/' . $fileName);
 				}
 			} else {
 				$fileName = '-';
@@ -451,7 +454,6 @@ class ServiceRequestController extends Controller
 			// $priorityName = Priority::where('priorityStatus','=',$request->input('servicePriority'))->orderBy('id')->first();
 			$serviceName = DB::table('service_assign')->where('id','=',$request->input('serviceName'))->orderBy('id')->first();
 
-
 			if($request->file('serviceFileUpload') != null){
 				$file = $request->file('serviceFileUpload');
 				// Check if multiple files are uploaded
@@ -469,6 +471,9 @@ class ServiceRequestController extends Controller
 				} else {
 					// Single file upload
 					$fileName = $file->getClientOriginalName();
+					$path = public_path('uploads' . $fileName);
+					$file->move(public_path('uploads'), $fileName);
+					$path = public_path('uploads/' . $fileName);
 				}
 			} else {
 				$fileName = '-';
