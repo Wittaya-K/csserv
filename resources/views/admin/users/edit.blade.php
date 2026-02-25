@@ -34,6 +34,18 @@
                     {{ trans('global.user.fields.email_helper') }}
                 </p>
             </div>
+            <div class="form-group {{ $errors->has('username') ? 'has-error' : '' }}">
+                <label for="username">{{ trans('global.user.fields.username') }}*</label>
+                <input type="text" id="username" name="username" class="form-control" value="{{ old('username', isset($user) ? $user->username : '') }}">
+                @if($errors->has('username'))
+                    <p class="help-block">
+                        {{ $errors->first('username') }}
+                    </p>
+                @endif
+                <p class="helper-block">
+                    {{ trans('global.user.fields.username_helper') }}
+                </p>
+            </div>
             <div class="form-group {{ $errors->has('password') ? 'has-error' : '' }}">
                 <label for="password">{{ trans('global.user.fields.password') }}</label>
                 <input type="password" id="password" name="password" class="form-control">

@@ -35,6 +35,14 @@
                 </tr>
                 <tr>
                     <th>
+                        {{ trans('global.user.fields.username') }}
+                    </th>
+                    <td>
+                        {{ $user->username }}
+                    </td>
+                </tr>
+                <tr>
+                    <th>
                         Roles
                     </th>
                     <td>

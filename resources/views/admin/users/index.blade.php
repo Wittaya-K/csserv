@@ -48,6 +48,9 @@
                             {{ trans('global.user.fields.email_verified_at') }}
                         </th>
                         <th>
+                            {{ trans('global.user.fields.username') }}
+                        </th>
+                        <th>
                             {{ trans('global.user.fields.roles') }}
                         </th>
                         <th>

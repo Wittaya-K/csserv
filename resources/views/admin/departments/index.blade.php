@@ -214,7 +214,8 @@
                     success: function(data) {
                         $('#department_Form').trigger("reset");
                         $('#ajaxModel').modal('hide');
-                        table.draw();
+                        // table.draw();
+                        location.reload();
                     },
                     error: function(data) {
                         console.log('Error:', data);

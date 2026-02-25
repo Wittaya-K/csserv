@@ -110,6 +110,8 @@ return [
             'email_helper'             => '',
             'email_verified_at'        => 'Email verified at',
             'email_verified_at_helper' => '',
+            'username'                 => 'User Name',
+            'username_helper'          => '',
             'password'                 => 'Password',
             'password_helper'          => '',
             'roles'                    => 'Roles',
