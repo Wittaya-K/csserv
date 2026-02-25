@@ -90,6 +90,14 @@ class ServiceRequestController extends Controller
         $service_assigns = ServiceAssign::orderBy('id')->get();
 		$prioritys = Priority::orderBy('id')->get();
 		$users = DB::table('users')->where('username','!=',NULL)->get();
+		$staffUsers = DB::table('users')
+				->join('role_user', 'users.id', '=', 'role_user.user_id')
+				->join('roles', 'role_user.role_id', '=', 'roles.id')
+				->where('roles.title', 'Staff')
+				->orWhere('roles.title', 'Admin')
+				->whereNotNull('users.username')
+				->select('users.*')
+				->get();
 		$servicesStatus = ServiceStatus::orderBy('id')->get();
 		$serviceRequest = serviceRequest::orderByDesc('id')->first();
         $serviceRequestHistory = ServiceRequestHistory::where('reqid','=',$id)->get();
@@ -153,7 +161,7 @@ class ServiceRequestController extends Controller
 
         $requestId = $serviceRequest->serviceRequestNumber;
 
-		return view('admin.service_requests.edit',compact('departments','service_assigns','requestId','prioritys','users','servicesStatus','serviceRequests','chatTitle','serviceRequestHistory','ServiceRequestMessages','serviceRequestHistoryServiceName','priorityName','serviceRequestHistoryDayAmountsPriorityName','fullName','serviceDueDate'));
+		return view('admin.service_requests.edit',compact('departments','service_assigns','requestId','prioritys','users','servicesStatus','serviceRequests','chatTitle','serviceRequestHistory','ServiceRequestMessages','serviceRequestHistoryServiceName','priorityName','serviceRequestHistoryDayAmountsPriorityName','fullName','serviceDueDate','staffUsers'));
 	}
 
     public function view($id){

@@ -222,15 +222,12 @@
                                         <div class="input-group-prepend">
                                             <span class="input-group-text"><i class="fad fa-keyboard"></i></span>
                                         </div>
-                                        <select name="serviceProvider" id="serviceProvider" class="form-control select2"
-                                            multiple
-                                            {{ $serviceRequests->serviceRecipient != Auth()->user()->username ? 'disabled' : '' }}
-                                            required>
+                                        <select name="serviceProvider[]" id="serviceProvider"
+                                            class="form-control select2" multiple {{ $serviceRequests->serviceRecipient != Auth()->user()->username ? 'disabled' : '' }} required>
                                             <option value="">เลือก</option>
-                                            <option value="">สวลี บัวศรี</option>
-                                            <option value="">กมลชนก ขันแข็ง</option>
-                                            <option value="">วิทยา ควรวิไลย</option>
-                                            <option value="">หนึ่งฤทัย อินทรฤทธิ์</option>
+                                            @foreach ($staffUsers as $staffUser)
+                                            <option value="{{ $staffUser->username }}">{{ $staffUser->name }}</option>
+                                            @endforeach
                                         </select>
                                     </div>
                                 </div>
@@ -683,12 +680,15 @@
                     text: "กรุณาระบุวันที่ต้องการใช้บริการ!",
                     icon: "warning"
                 });
-            } else if ($('#serviceProvider').val() == '') {
-                Swal.fire({
-                    title: "แจ้งเตือน!",
-                    text: "กรุณาระบุผู้ให้บริการ!",
-                    icon: "warning"
-                });
+            } else if (!($('#serviceProvider').length)) {
+                const selected = $('#serviceProvider').val();
+                if (!selected || selected.length === 0) {
+                    Swal.fire({
+                        title: "แจ้งเตือน!",
+                        text: "กรุณาระบุผู้ให้บริการ!",
+                        icon: "warning"
+                    });
+                }
             } else if ($('#serviceName').val() == '') {
                 Swal.fire({
                     title: "แจ้งเตือน!",
