@@ -461,12 +461,15 @@
                     text: "กรุณาระบุวันที่ต้องการใช้บริการ!",
                     icon: "warning"
                 });
-            } else if ($('#serviceProvider').val() == '') {
-                Swal.fire({
-                    title: "แจ้งเตือน!",
-                    text: "กรุณาระบุผู้ให้บริการ!",
-                    icon: "warning"
-                });
+            } else if (!($('#serviceProvider').length)) {
+                const selected = $('#serviceProvider').val();
+                if (!selected || selected.length === 0) {
+                    Swal.fire({
+                        title: "แจ้งเตือน!",
+                        text: "กรุณาระบุผู้ให้บริการ!",
+                        icon: "warning"
+                    });
+                }
             } else if ($('#serviceName').val() == '') {
                 Swal.fire({
                     title: "แจ้งเตือน!",
