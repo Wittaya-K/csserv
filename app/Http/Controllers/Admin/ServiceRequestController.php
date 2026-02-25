@@ -419,7 +419,7 @@ class ServiceRequestController extends Controller
 				];
 
 				// ส่งอีเมลแจ้งเตือน
-				Mail::send(new SendEmail($details,$email,$fileName));
+				// Mail::send(new SendEmail($details,$email,$fileName));
 
 				return response()->json(['status' => true, 'message' => 'บันทึกสำเร็จ!']);
 			}
@@ -593,7 +593,7 @@ class ServiceRequestController extends Controller
 				];
 
 				// ส่งอีเมลแจ้งเตือน
-				Mail::send(new SendEmail($details,$email,$fileName));
+				// Mail::send(new SendEmail($details,$email,$fileName));
 
 				return response()->json(['status' => true, 'message' => 'บันทึกสำเร็จ!']);
 			}
@@ -754,7 +754,7 @@ class ServiceRequestController extends Controller
 				];
 
 				// ส่งอีเมลแจ้งเตือน
-				Mail::send(new SendEmail($details, $email, $fileName));
+				// Mail::send(new SendEmail($details, $email, $fileName));
 
 				return response()->json(['status' => true, 'message' => 'บันทึกสำเร็จ!']);
 			}
