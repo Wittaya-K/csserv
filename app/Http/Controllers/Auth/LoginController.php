@@ -51,10 +51,12 @@ class LoginController extends Controller
 
         $input = $request->input('username');
         $password = $request->input('password');
-
+        $getUsers = DB::table('users')->where('username', '=', $input)->first();
+        
         // ถ้าไม่มี @ แสดงว่าเป็น username ให้เติม @psu.ac.th
         if (!str_contains($input, '@')) {
-            $email = $input . '@psu.ac.th';
+            // $email = $input . '@psu.ac.th';
+            $email = $getUsers->email;
         } else {
             // เป็น email อยู่แล้ว ใช้ได้เลย
             $email = $input;
