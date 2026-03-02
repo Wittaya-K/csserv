@@ -1,6 +1,3 @@
-https://csserv.dev.psu.ac.th/login
-https://csserv.dev.psu.ac.th/logout
-
 
 php artisan config:clear
 php artisan route:clear
