@@ -75,13 +75,13 @@
                             <i class="fad fa-envelope"></i> เมล์: {{ Auth::user()->email }}
                         </a>
                         <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item"
+                        {{-- <a href="#" class="dropdown-item"
                             onclick="event.preventDefault(); document.getElementById('logoutform').submit();">
                             <i class="fad fa-sign-out"></i> ออกจากระบบ
-                        </a>
-                        {{-- <a href="{{ url('/logout-azure') }}" class="dropdown-item">
-                            <i class="fad fa-sign-out"></i> ออกจากระบบ
                         </a> --}}
+                        <a href="{{ url('/logout-azure') }}" class="dropdown-item">
+                            <i class="fad fa-sign-out"></i> ออกจากระบบ
+                        </a>
                     </div>
                 </li>
             </ul>
@@ -101,9 +101,9 @@
         </footer>
         {{-- <aside class="control-sidebar control-sidebar-dark">
         </aside> --}}
-        <form id="logoutform" action="{{ route('logout') }}" method="POST" style="display: none;">
+        {{-- <form id="logoutform" action="{{ route('logout') }}" method="POST" style="display: none;">
             {{ csrf_field() }}
-        </form>
+        </form> --}}
     </div>
     
     <script src="{{ asset('dist/js/jquery.min.js') }}"></script>
