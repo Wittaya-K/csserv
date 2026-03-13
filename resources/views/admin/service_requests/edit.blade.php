@@ -81,7 +81,7 @@
                                     <label class="col-sm-12 control-label">หมายเลขคำขอ</label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="fad fa-keyboard"></i></span>
+                                            {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                         </div>
                                         <input type="text" name="serviceRequestNumber" id="serviceRequestNumber"
                                             class="form-control" value="{{ $requestId }}" readonly required
@@ -95,7 +95,7 @@
                                     <label class="col-sm-12 control-label">รายละเอียด</label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="fad fa-keyboard"></i></span>
+                                            {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                         </div>
                                         <textarea type="textarea" name="serviceDescription" id="serviceDescription" class="form-control" required
                                             placeholder="ระบุรายละเอียดที่ต้องการ"
@@ -107,6 +107,44 @@
 
                         <div class="row">
                             <div class="col-lg-6 col-12">
+                                <div class="form-group">
+                                    <label class="col-sm-12 control-label">ประเภทหน่วยงาน</label>
+                                    <div class="input-group mb-3">
+                                        <div class="input-group-prepend">
+                                            {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
+                                        </div>
+                                        <select name="departmentType" id="departmentType" class="form-control select2" required>
+                                            <option value="">เลือก</option>
+                                            <option value="ภายในคณะวิทยาศาสตร์">ภายในคณะวิทยาศาสตร์</option>
+                                            <option value="ภายนอกคณะวิทยาศาสตร์">ภายนอกคณะวิทยาศาสตร์</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-12">
+                                <div class="form-group">
+                                    <label class="col-sm-12 control-label">เลือกหน่วยงาน</label>
+                                    <div class="input-group mb-3">
+                                        <div class="input-group-prepend">
+                                            {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
+                                        </div>
+                                        <select name="serviceDepartment" id="serviceDepartment" class="form-control select2" onchange="selectdepartments(this.value, this)" required>
+                                            <option value="">เลือก</option>
+                                            {{-- @foreach ($departments as $department)
+                                            <option value="{{ $department->id }}">
+                                                {{ $department->departmentName }}
+                                            </option>
+                                            @endforeach
+                                            <option value="etc">อื่นๆ</option> --}}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            {{-- <div class="col-lg-6 col-12">
                                 <div class="form-group">
                                     <label class="col-sm-12 control-label">หน่วยงานผู้ขอใช้บริการ</label>
                                     <div class="input-group mb-3">
@@ -128,13 +166,27 @@
                                         </select>
                                     </div>
                                 </div>
+                            </div> --}}
+                            <div class="col-lg-6 col-12">
+                                <div class="form-group">
+                                    <label class="col-sm-12 control-label">วันที่ขอใช้บริการ</label>
+                                    <div class="input-group mb-3">
+                                        <div class="input-group-prepend">
+                                            {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
+                                        </div>
+                                        <input type="text" class="form-control" name="serviceDueDate" readonly
+                                            {{ $serviceRequests->serviceRecipient != Auth()->user()->username ? 'disabled' : '' }}
+                                            id="serviceDueDate">
+                                    </div>
+                                </div>
                             </div>
+
                             <div class="col-lg-6 col-12">
                                 <div class="form-group">
                                     <label class="col-sm-12 control-label">ชั้นความเร็ว</label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="fad fa-keyboard"></i></span>
+                                            {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                         </div>
                                         <input type="text" name="" id="" class="form-control"
                                             value="{{ $priorityName }}" readonly required placeholder="" />
@@ -149,7 +201,7 @@
                                     <label class="col-sm-12 control-label">ชื่อหน่วยงาน</label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text bg-warning"><i class="fad fa-keyboard"></i></span>
+                                            {{-- <span class="input-group-text bg-warning"><i class="fad fa-keyboard"></i></span> --}}
                                         </div>
                                         <input type="text" name="departmentName" id="departmentName"
                                             class="form-control form-control is-warning" required placeholder="" />
@@ -164,17 +216,15 @@
                                     <label class="col-sm-12 control-label">ประเภทหน่วยงาน</label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text bg-warning"><i
-                                                    class="fad fa-keyboard"></i></span>
+                                            {{-- <span class="input-group-text bg-warning"><i class="fad fa-keyboard"></i></span> --}}
                                         </div>
                                         <select name="departmentType" id="departmentType"
                                             class="form-control form-control is-warning" required>
                                             <option value="">เลือก</option>
                                             {{-- <option value="ภายในคณะวิทยาศาสตร์">ภายในคณะวิทยาศาสตร์
                                                     </option> --}}
-                                            <option value="ภายนอกคณะวิทยาศาสตร์" selected>
-                                                ภายนอกคณะวิทยาศาสตร์
-                                            </option>
+                                        <option value="ภายในคณะวิทยาศาสตร์">ภายในคณะวิทยาศาสตร์</option>
+                                        <option value="ภายนอกคณะวิทยาศาสตร์">ภายนอกคณะวิทยาศาสตร์</option>
                                         </select>
                                     </div>
                                 </div>
@@ -187,7 +237,7 @@
                                     <label class="col-sm-12 control-label">ผู้ขอใช้บริการ</label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="fad fa-keyboard"></i></span>
+                                            {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                         </div>
                                         <input type="text" name="txtServiceRecipient" id="txtServiceRecipient"
                                             value="{{ $fullName->name }}" class="form-control" required placeholder=""
@@ -201,14 +251,12 @@
 
                             <div class="col-lg-6 col-12">
                                 <div class="form-group">
-                                    <label class="col-sm-12 control-label">วันที่ต้องการ</label>
+                                    <label class="col-sm-12 control-label">ระบุผู้ขอใช้บริการ</label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="fad fa-keyboard"></i></span>
+                                            {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                         </div>
-                                        <input type="text" class="form-control" name="serviceDueDate"
-                                            {{ $serviceRequests->serviceRecipient != Auth()->user()->username ? 'disabled' : '' }}
-                                            id="serviceDueDate">
+                                        <input type="text" class="form-control" name="request_name" id="request_name" value="{{ $requestName }}">
                                     </div>
                                 </div>
                             </div>
@@ -220,10 +268,10 @@
                                     <label class="col-sm-12 control-label">เลือกผู้ให้บริการ</label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="fad fa-keyboard"></i></span>
+                                            {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                         </div>
                                         <select name="serviceProvider[]" id="serviceProvider"
-                                            class="form-control select2" multiple {{ $serviceRequests->serviceRecipient != Auth()->user()->username ? 'disabled' : '' }} required>
+                                            class="form-control select2" {{ $serviceRequests->serviceRecipient != Auth()->user()->username ? 'disabled' : '' }} required>
                                             <option value="">เลือก</option>
                                             @foreach ($staffUsers as $staffUser)
                                             <option value="{{ $staffUser->username }}">{{ $staffUser->name }}</option>
@@ -238,7 +286,7 @@
                                     <label class="col-sm-12 control-label">งานบริการ</label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="fad fa-keyboard"></i></span>
+                                            {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                         </div>
                                         <select name="serviceName" id="serviceName" class="form-control select2"
                                             {{ $serviceRequests->serviceRecipient != Auth()->user()->username ? 'disabled' : '' }}
@@ -259,8 +307,8 @@
                         <div class="row">
                             <div class="col-lg-6 col-12">
                                 <div class="btcd-f-input">
-                                    <label class="col-sm-12 control-label">ไฟล์ (PDF, JPG, PNG, EXCEL,
-                                        WORD)</label>
+                                    {{-- <label class="col-sm-12 control-label">ไฟล์ (PDF, JPG, PNG, EXCEL, WORD)</label> --}}
+                                    <label class="col-sm-12 control-label">ไฟล์</label>
                                     <input type="file" name="serviceFileUpload" id="serviceFileUpload" {{ $serviceRequests->serviceRecipient != Auth()->user()->username ? 'disabled' : '' }}>
                                     {{-- <div class="btcd-f-wrp">
                                         <button class="btcd-inpBtn" type="button"> <img src="" alt="">
@@ -281,7 +329,7 @@
                                     <label class="col-sm-12 control-label">สถานะคำขอ</label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="fad fa-keyboard"></i></span>
+                                            {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                         </div>
                                         <select name="serviceStatus" id="serviceStatus"
                                             onchange="service_status_change(this.value, this)"
@@ -450,19 +498,19 @@
             $('#serviceRequestMessage').val('');
 
             $("#serviceName").select2({
-                width: '85%'
+                // width: '85%'
             });
             $("#serviceDepartment").select2({
-                width: '85%'
+                // width: '85%'
             });
             $("#servicePriority").select2({
-                width: '85%'
+                // width: '85%'
             });
             $("#serviceProvider").select2({
-                width: '85%'
+                // width: '85%'
             });
             $("#serviceStatus").select2({
-                width: '85%'
+                // width: '85%'
             });
 
             // $(".rating").each(function() {
@@ -528,15 +576,15 @@
         });
 
 
-        $('#serviceDueDate').datetimepicker({
-            mask: '0000-00-00 00:00',
-            format: 'Y-m-d H:i',
-            formatTime: 'H:i',
-            formatDate: 'Y-m-d',
-            step: 30, //กำหนดค่านาทีของเวลา
-            lang: 'th', //กำหนดค่าเป็นภาษาไทย
-            minDate: '-1970/01/01' // yesterday is minimum date
-        });
+        // $('#serviceDueDate').datetimepicker({
+        //     mask: '0000-00-00 00:00',
+        //     format: 'Y-m-d H:i',
+        //     formatTime: 'H:i',
+        //     formatDate: 'Y-m-d',
+        //     step: 30, //กำหนดค่านาทีของเวลา
+        //     lang: 'th', //กำหนดค่าเป็นภาษาไทย
+        //     minDate: '-1970/01/01' // yesterday is minimum date
+        // });
 
         var tbl_schedule;
         show_schedule();
@@ -959,5 +1007,80 @@
                 }
             });
         }
+
+        $('#departmentType').change(function() {
+            var departmentType = $(this).val();
+
+            $.ajax({
+                type: "GET",
+                url: "{{ route('admin.service_requests.departmentType') }}",
+                data: {
+                    departmentType: departmentType,
+                },
+                dataType: 'json',
+                beforeSend: function() {
+                    $('#serviceDepartment').html('<option value="">-- Loading... --</option>');
+                },
+                success: function(response) {
+                    $('#serviceDepartment').empty();
+                    $('#serviceDepartment').append('<option value=""> เลือก </option>');
+
+                    if (response.status == true) {
+                        $.each(response.data, function(index, item) {
+                            $('#serviceDepartment').append(
+                                $('<option>', {
+                                    value: item.id,
+                                    text: item.departmentName
+                                })
+                            );
+                        });
+                        $('#serviceDepartment').append('<option value="etc">อื่นๆ</option>');
+                    } else {
+                        $('#serviceDepartment').append('<option value="">-- ไม่พบข้อมูล --</option>');
+                    }
+                },
+                error: function(error) {
+                    console.log(error);
+                    $('#serviceDepartment').html('<option value="">-- เกิดข้อผิดพลาด --</option>');
+                }
+            });
+        });
+
+    $('#serviceProvider').change(function() {
+        var serviceProvider = $(this).val();
+
+        $.ajax({
+            type: "GET",
+            url: "{{ route('admin.service_requests.servicename') }}",
+            data: {
+                serviceProvider: serviceProvider,
+            },
+            dataType: 'json',
+            beforeSend: function() {
+                $('#serviceName').html('<option value="">-- Loading... --</option>');
+            },
+            success: function(response) {
+                $('#serviceName').empty();
+                $('#serviceName').append('<option value=""> เลือก </option>');
+
+                if (response.status == true) {
+                    $.each(response.data, function(index, item) {
+                        $('#serviceName').append(
+                            $('<option>', {
+                                value: item.id,
+                                text: item.serviceName
+                            })
+                        );
+                    });
+                } else {
+                    $('#serviceName').append('<option value="">-- ไม่พบข้อมูล --</option>');
+                }
+            },
+            error: function(error) {
+                console.log(error);
+                $('#serviceName').html('<option value="">-- เกิดข้อผิดพลาด --</option>');
+            }
+        });
+    });
     </script>
 @endsection

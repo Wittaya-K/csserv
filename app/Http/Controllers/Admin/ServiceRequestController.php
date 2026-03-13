@@ -100,6 +100,7 @@ class ServiceRequestController extends Controller
 				->get();
 		$servicesStatus = ServiceStatus::orderBy('id')->get();
 		$serviceRequest = serviceRequest::orderByDesc('id')->first();
+		$serviceRequestName = serviceRequest::select('serviceRequestName')->where('serviceRequestNumber','=',$serviceRequest->serviceRequestNumber)->first();
         $serviceRequestHistory = ServiceRequestHistory::where('reqid','=',$id)->get();
         $ServiceRequestMessages = ServiceRequestMessage::where('reqid','=',$id)->get();
         $serviceRequestHistorys = ServiceRequestHistory::where('reqid','=',$id)->first();
@@ -160,8 +161,9 @@ class ServiceRequestController extends Controller
         }
 
         $requestId = $serviceRequest->serviceRequestNumber;
+		$requestName = $serviceRequestName->serviceRequestName;
 
-		return view('admin.service_requests.edit',compact('departments','service_assigns','requestId','prioritys','users','servicesStatus','serviceRequests','chatTitle','serviceRequestHistory','ServiceRequestMessages','serviceRequestHistoryServiceName','priorityName','serviceRequestHistoryDayAmountsPriorityName','fullName','serviceDueDate','staffUsers'));
+		return view('admin.service_requests.edit',compact('departments','service_assigns','requestId','prioritys','users','servicesStatus','serviceRequests','chatTitle','serviceRequestHistory','ServiceRequestMessages','serviceRequestHistoryServiceName','priorityName','serviceRequestHistoryDayAmountsPriorityName','fullName','serviceDueDate','staffUsers','requestName'));
 	}
 
     public function view($id){
@@ -314,6 +316,7 @@ class ServiceRequestController extends Controller
 
 			$serviceDepartment = $request->input('serviceDepartment');
 			$departmentType = $request->input('departmentType');
+			$requestName = $request->input('request_name');
 
 			if($serviceDepartment == 'etc'){
 				$departments = Department::updateOrCreate(
@@ -341,6 +344,7 @@ class ServiceRequestController extends Controller
 							'serviceName' => $request->input('serviceName'), // ชื่องานบริการ
 							'serviceDepartment' => $departmentName->id, // หน่วยงานที่ให้บริการ
 							'serviceDepartmentType' => $departmentType, // หน่วยงานภายในหรือภายนอก
+							'serviceRequestName' => $requestName, //ระบุผู้ขอใช้บริการ
 							'serviceFileUpload' => $fileName, // ไฟล์แนบ
 							'serviceStatus' => 'pending', // สถานะคำขอ
 							'serviceDateTime' => Carbon::now(),
@@ -364,6 +368,7 @@ class ServiceRequestController extends Controller
 						'serviceName' => $request->input('serviceName'),
 						'serviceDepartment' => $request->input('serviceDepartment'),
 						'serviceDepartmentType' => $departmentName->departmentType,
+						'serviceRequestName' => $requestName, //ระบุผู้ขอใช้บริการ
 						'serviceFileUpload' => $fileName,
 						'serviceStatus' => 'pending',
 						'serviceDateTime' => Carbon::now(),
@@ -481,6 +486,7 @@ class ServiceRequestController extends Controller
 
 			$serviceDepartment = $request->input('serviceDepartment');
 			$departmentType = $request->input('departmentType');
+			$requestName = $request->input('request_name');
 
 			if($serviceDepartment == 'etc'){
 				$departments = Department::updateOrCreate(
@@ -507,6 +513,7 @@ class ServiceRequestController extends Controller
                                 'serviceHistoryName' => $serviceRequest->serviceName,
                                 'serviceHistoryDepartment' => $serviceRequest->serviceDepartment,
                                 'serviceHistoryDepartmentType' => $serviceRequest->serviceDepartmentType,
+								'serviceRequestName' => $requestName, //ระบุผู้ขอใช้บริการ
                                 'serviceHistoryFileUpload' => $serviceRequest->serviceFileUpload,
                                 'serviceHistoryStatus' => $serviceRequest->serviceStatus,
                                 'serviceHistoryDateTime' =>$serviceRequest->serviceDateTime,
@@ -526,6 +533,7 @@ class ServiceRequestController extends Controller
 							'serviceName' => $request->input('serviceName'), // ชื่องานบริการ
 							'serviceDepartment' => $departmentName->id, // หน่วยงานที่ให้บริการ
 							'serviceDepartmentType' => $departmentType, // หน่วยงานภายในหรือภายนอก
+							'serviceRequestName' => $requestName, //ระบุผู้ขอใช้บริการ
 							'serviceFileUpload' => $fileName, // ไฟล์แนบ
 							'serviceStatus' => 'pending', // สถานะคำขอ
 							'serviceDateTime' => Carbon::now(),
@@ -546,6 +554,7 @@ class ServiceRequestController extends Controller
                             'serviceHistoryName' => $serviceRequest->serviceName,
                             'serviceHistoryDepartment' => $serviceRequest->serviceDepartment,
                             'serviceHistoryDepartmentType' => $serviceRequest->serviceDepartmentType,
+							'serviceRequestName' => $requestName, //ระบุผู้ขอใช้บริการ
                             'serviceHistoryFileUpload' => $serviceRequest->serviceFileUpload,
                             'serviceHistoryStatus' => $serviceRequest->serviceStatus,
                             'serviceHistoryDateTime' =>$serviceRequest->serviceDateTime,
@@ -565,6 +574,7 @@ class ServiceRequestController extends Controller
 						'serviceName' => $request->input('serviceName'),
 						'serviceDepartment' => $request->input('serviceDepartment'),
 						'serviceDepartmentType' => $departmentName->departmentType,
+						'serviceRequestName' => $requestName, //ระบุผู้ขอใช้บริการ
 						'serviceFileUpload' => $fileName,
 						'serviceStatus' => 'pending',
 						'serviceDateTime' => Carbon::now(),
@@ -864,6 +874,29 @@ class ServiceRequestController extends Controller
 		// dd($serviceRequestNotes);
 		if($serviceRequestNotes){
 			return response()->json(['status' => true, 'data' => $serviceRequestNotes ]);
+		}else{
+			return response()->json(['status' => false, 'message' => 'ไม่พบข้อมูล']);
+		}
+	}
+
+	public function departmentType(Request $request)
+	{
+		$departmentType = $request->input('departmentType');
+		$data = Department::where('departmentType','=',$departmentType)->get();
+		// dd($data);
+		if($data){
+			return response()->json(['status' => true, 'data' => $data ]);
+		}else{
+			return response()->json(['status' => false, 'message' => 'ไม่พบข้อมูล']);
+		}
+	}
+
+	public	function servicename(Request $request){
+		$serviceProvider = $request->input('serviceProvider');
+		$data = ServiceAssign::where('serviceProvider','=',$serviceProvider)->get();
+		// dd($data);
+		if($data){
+			return response()->json(['status' => true, 'data' => $data ]);
 		}else{
 			return response()->json(['status' => false, 'message' => 'ไม่พบข้อมูล']);
 		}

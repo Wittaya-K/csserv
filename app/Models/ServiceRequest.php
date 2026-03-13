@@ -20,6 +20,7 @@ class ServiceRequest extends Model
         'serviceRecipient',
         'servicePriority',
         'serviceProvider',
+        'serviceRequestName',
         'serviceFileUpload',
         'serviceStatus',
         'serviceDateTime',

@@ -1,7 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Auth\PSUAuthController;
 use App\Http\Controllers\Admin\DepartmentsController;
 use App\Http\Controllers\Admin\ServiceAssignController;
 use App\Http\Controllers\Admin\ServiceRequestController;
@@ -10,6 +9,8 @@ use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\PriorityController;
 use App\Http\Controllers\Admin\RequestListController;
 use App\Http\Controllers\Admin\ReportSumarryController;
+use App\Http\Controllers\Admin\ManageLinkController;
+use App\Http\Controllers\Admin\ViewLinkController;
 use Laravel\Socialite\Facades\Socialite;
 use App\User;
 use Illuminate\Http\Request;
@@ -20,9 +21,6 @@ Route::redirect('/', '/login');
 // Route::get('login', 'Auth\LoginController@showLoginForm')->name('auth.login');
 // Route::post('login', 'Auth\LoginController@login')->name('auth.login');
 // Route::post('logout', 'Auth\LoginController@logout')->name('auth.logout');
-
-// Route::get('auth/psu', [PSUAuthController::class, 'redirectToPSU'])->name('auth.psu');
-// Route::get('auth/callback', [PSUAuthController::class, 'handlePSUCallback']);
 
 Route::redirect('/home', '/admin');
 
@@ -96,7 +94,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::resource('service_assigns',ServiceAssignController::class);
     Route::resource('prioritys', PriorityController::class);
     Route::resource('service_status', ServiceStatusController::class);
-    // Route::resource('report_summary', ReportSumarryController::class);
+    Route::resource('manage_links', ManageLinkController::class);
+    Route::resource('view_links', ViewLinkController::class);
 
     Route::group(['prefix' => 'report_summary', 'as' => 'report_summary.'], function () {
         Route::get('/', [ReportSumarryController::class, 'index'])->name('index');
@@ -123,6 +122,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
             Route::post('update/{id?}', 'update')->name('update');
             Route::post('serviceFlag', 'serviceFlag')->name('serviceFlag');
             Route::post('serviceRequestMessage', 'serviceRequestMessage')->name('serviceRequestMessage');
+            Route::get('departmentType/', 'departmentType')->name('departmentType');
+            Route::get('servicename/','servicename')->name('servicename');
         });
     });
 

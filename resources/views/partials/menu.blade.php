@@ -21,7 +21,7 @@
                 @can('setting_access')
                 {{-- <li class="nav-header">ตั้งค่า</li> --}}
                 <li
-                    class="nav-item has-treeview {{ request()->is('admin/assign_tasks*') ? 'menu-open' : '' }} {{ request()->is('admin/departments*') ? 'menu-open' : '' }} {{ request()->is('admin/service_assigns*') ? 'menu-open' : '' }} {{ request()->is('admin/prioritys*') ? 'menu-open' : '' }} {{ request()->is('admin/service_status*') ? 'menu-open' : '' }}">
+                    class="nav-item has-treeview {{ request()->is('admin/assign_tasks*') ? 'menu-open' : '' }} {{ request()->is('admin/departments*') ? 'menu-open' : '' }} {{ request()->is('admin/service_assigns*') ? 'menu-open' : '' }} {{ request()->is('admin/prioritys*') ? 'menu-open' : '' }} {{ request()->is('admin/service_status*') ? 'menu-open' : '' }} {{ request()->is('admin/manage_links*') ? 'menu-open' : '' }}">
                     <a class="nav-link nav-dropdown-toggle">
                         <i class="fad fa-cog"></i>
                         <p>
@@ -74,11 +74,22 @@
                                 </a>
                             </li>
                         @endcan
+                        @can('manage_link_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.manage_links.index') }}"
+                                class="nav-link {{ request()->is('admin/manage_links') || request()->is('admin/manage_links/*') ? 'active' : '' }}">
+                                <i class="fad fa-chevron-circle-right"></i>
+                                <p>
+                                    <span>ลิงก์</span>
+                                </p>
+                            </a>
+                        </li>
+                        @endcan
                     </ul>
                 </li>
                 @endcan
                 {{-- <li class="nav-header">บริการ</li> --}}
-                <li class="nav-item has-treeview {{ request()->is('admin/service_requests*') ? 'menu-open' : '' }}  {{ request()->is('admin/service_lists*') ? 'menu-open' : '' }}">
+                <li class="nav-item has-treeview {{ request()->is('admin/service_requests*') ? 'menu-open' : '' }}  {{ request()->is('admin/service_lists*') ? 'menu-open' : '' }} {{ request()->is('admin/view_links*') ? 'menu-open' : '' }}">
                     @can('service_request_access')
                     <a class="nav-link nav-dropdown-toggle">
                         <i class="fad fa-user-headset"></i>
@@ -100,8 +111,16 @@
                                 </a>
                             </li>
                         @endcan
-                        @can('service_list_access')
-
+                        @can('view_link_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.view_links.index') }}"
+                                class="nav-link {{ request()->is('admin/view_links') || request()->is('admin/view_links/*') ? 'active' : '' }}">
+                                <i class="fad fa-chevron-circle-right"></i>
+                                <p>
+                                    <span>ลิงก์หน่วยงานที่เกี่ยวข้อง</span>
+                                </p>
+                            </a>
+                        </li>
                         @endcan
                     </ul>
                 </li>
