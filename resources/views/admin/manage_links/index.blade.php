@@ -68,8 +68,6 @@
                                         <div class="input-group-prepend">
                                             <span class="input-group-text"><i class="fad fa-keyboard"></i></span>
                                         </div>
-                                        {{-- <input type="text" class="form-control" id="department_name" name="department_name" placeholder=""
-                                        placeholder="" required> --}}
                                         <select name="department_name" id="department_name" class="form-control select2" required>
                                             @foreach ($dataDepartment as $item)
                                                 <option value="{{ $item->departmentName }}">{{ $item->departmentName }}</option>
@@ -134,6 +132,7 @@
 @endsection
 @section('scripts')
     @parent
+    <script type="text/javascript" src="{{ asset('js/sweetalert2@11.js') }}"></script>
     <script type="text/javascript">
         $(function() {
             $.ajaxSetup({
@@ -183,21 +182,6 @@
                 $('#ajaxModel').modal('show');
             });
 
-
-            // $('body').on('click', '.edit', function() {
-            //     var manage_link_id = $(this).data('id');
-            //     $.get("{{ route('admin.manage_links.index') }}" + '/' + manage_link_id + '/edit', function(
-            //         data) {
-            //         $('#modelHeading').html("แก้ไขข้อมูล");
-            //         $('#saveBtn').val("edit-user");
-            //         $('#ajaxModel').modal('show');
-            //         $('#manage_link_id').val(data.id);
-            //         $('#department_name').val(data.department_name);
-            //         $('#link_name').val(data.link_name);
-            //         $('#link').val(data.link);
-            //     })
-            // });
-
             $('body').on('click', '.edit', function() {
                 var manage_link_id = $(this).data('id');
                 $.get("{{ route('admin.manage_links.index') }}" + '/' + manage_link_id + '/edit', function(data) {
@@ -205,8 +189,8 @@
                     $('#saveBtn').val("edit-user");
                     $('#ajaxModel').modal('show');
                     $('#manage_link_id').val(data.id);
-                    // $('#department_name').val(data.department_name).trigger('change');
-                    $('#department_name').val(data.department_name);
+                    $('#department_name').val(data.department_name).trigger('change');
+                    // $('#department_name').val(data.department_name);
                     $('#link_name').val(data.link_name);
                     $('#link').val(data.link);
 
@@ -227,23 +211,32 @@
                 let form = document.getElementById('manage_link_Form');
                 let formData = new FormData(form);
 
-                // if ($('#departmentName').val() == '') {
-                //     Swal.fire({
-                //         title: "แจ้งเตือน!",
-                //         text: "กรุณาระบุชื่อหน่วยงาน!",
-                //         icon: "warning"
-                //     });
-                //     return;
-                // }
+                if ($('#department_name').val() == '') {
+                    Swal.fire({
+                        title: "แจ้งเตือน!",
+                        text: "กรุณาระบุชื่อหน่วยงาน!",
+                        icon: "warning"
+                    });
+                    return;
+                }
 
-                // if ($('#departmentType').val() == '') {
-                //     Swal.fire({
-                //         title: "แจ้งเตือน!",
-                //         text: "กรุณาระบุประเภทหน่วยงาน!",
-                //         icon: "warning"
-                //     });
-                //     return;
-                // }
+                if ($('#link_name').val() == '') {
+                    Swal.fire({
+                        title: "แจ้งเตือน!",
+                        text: "กรุณาระบุชื่อลิงก์!",
+                        icon: "warning"
+                    });
+                    return;
+                }
+
+                if ($('#link').val() == '') {
+                    Swal.fire({
+                        title: "แจ้งเตือน!",
+                        text: "กรุณาระบุลิงก์!",
+                        icon: "warning"
+                    });
+                    return;
+                }
 
                 $.ajax({
                     url: "{{ route('admin.manage_links.store') }}",

@@ -1,11 +1,6 @@
 @extends('layouts.admin')
 @section('content')
 <style>
-    /* .modal-dialog {
-                max-width: 1440px;
-                margin: 1.75rem auto;
-                max-height: 1440px;
-            } */
     .rating .fa-star {
         font-size: 18px;
         color: #ccc;
@@ -65,7 +60,6 @@
                                 <label class="col-sm-12 control-label">หมายเลขคำขอ</label>
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
-                                        {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                     </div>
                                     <input type="text" name="serviceRequestNumber" id="serviceRequestNumber" class="form-control" value="{{ $requestId }}" readonly required placeholder="" />
                                 </div>
@@ -77,7 +71,6 @@
                                 <label class="col-sm-12 control-label">รายละเอียด</label>
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
-                                        {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                     </div>
                                     <textarea type="textarea" name="serviceDescription" id="serviceDescription" class="form-control" required placeholder="ระบุรายละเอียดที่ต้องการ"></textarea>
                                 </div>
@@ -91,7 +84,6 @@
                                 <label class="col-sm-12 control-label">ประเภทหน่วยงาน</label>
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
-                                        {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                     </div>
                                     <select name="departmentType" id="departmentType" class="form-control select2" required>
                                         <option value="">เลือก</option>
@@ -104,19 +96,12 @@
 
                         <div class="col-lg-4 col-12">
                             <div class="form-group">
-                                <label class="col-sm-12 control-label">เลือกหน่วยงาน</label>
+                                <label class="col-sm-12 control-label">หน่วยงาน</label>
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
-                                        {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                     </div>
                                     <select name="serviceDepartment" id="serviceDepartment" class="form-control select2" onchange="selectdepartments(this.value, this)" required>
                                         <option value="">เลือก</option>
-                                        {{-- @foreach ($departments as $department)
-                                        <option value="{{ $department->id }}">
-                                            {{ $department->departmentName }}
-                                        </option>
-                                        @endforeach
-                                        <option value="etc">อื่นๆ</option> --}}
                                     </select>
                                 </div>
                             </div>
@@ -129,7 +114,6 @@
                                 <label class="col-sm-12 control-label">ชื่อหน่วยงาน</label>
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
-                                        {{-- <span class="input-group-text bg-warning"><i class="fad fa-keyboard"></i></span> --}}
                                     </div>
                                     <input type="text" name="departmentName" id="departmentName" class="form-control form-control is-warning" required placeholder="" />
                                     <input type="hidden" name="departmentId" id="departmentId" class="form-control" required placeholder="" />
@@ -142,7 +126,6 @@
                                 <label class="col-sm-12 control-label">ประเภทหน่วยงาน</label>
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
-                                        {{-- <span class="input-group-text bg-warning"><i class="fad fa-keyboard"></i></span> --}}
                                     </div>
                                     <select name="departmentType" id="departmentType" class="form-control form-control is-warning" required>
                                         <option value="">เลือก</option>
@@ -160,7 +143,6 @@
                                 <label class="col-sm-12 control-label">ผู้ขอใช้บริการ</label>
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
-                                        {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                     </div>
                                     <input type="text" name="txtServiceRecipient" id="txtServiceRecipient" value="{{ Auth()->user()->name }}" class="form-control" required placeholder="" readonly />
                                     <input type="hidden" name="serviceRecipient" id="serviceRecipient" value="{{ Auth()->user()->username }}" class="form-control" required placeholder="" />
@@ -173,7 +155,6 @@
                                 <label class="col-sm-12 control-label">ระบุผู้ขอใช้บริการ</label>
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
-                                        {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                     </div>
                                     <input type="text" class="form-control" name="request_name" id="request_name" value="">
                                 </div>
@@ -185,7 +166,6 @@
                                 <label class="col-sm-12 control-label">วันที่ขอใช้บริการ</label>
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
-                                        {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                     </div>
                                     <input type="text" class="form-control" name="serviceDueDate" id="serviceDueDate" value="{{ now()->format('Y-m-d H:i') }}" readonly>
                                 </div>
@@ -199,7 +179,6 @@
                                 <label class="col-sm-12 control-label">เลือกผู้ให้บริการ</label>
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
-                                        {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                     </div>
                                     <select name="serviceProvider[]" id="serviceProvider" class="form-control select2" required>
                                         <option value="">เลือก</option>
@@ -216,15 +195,9 @@
                                 <label class="col-sm-12 control-label">งานบริการ</label>
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
-                                        {{-- <span class="input-group-text"><i class="fad fa-keyboard"></i></span> --}}
                                     </div>
                                     <select name="serviceName" id="serviceName" class="form-control select2" required>
                                         <option value="">เลือก</option>
-                                        {{-- @foreach ($service_assigns as $service_assign)
-                                        <option value="{{ $service_assign->id }}">
-                                            {{ $service_assign->serviceName }}
-                                        </option>
-                                        @endforeach --}}
                                     </select>
                                 </div>
                             </div>
@@ -234,18 +207,8 @@
                     <div class="row">
                         <div class="col-lg-4 col-12">
                             <div class="btcd-f-input">
-                                {{-- <label class="col-sm-12 control-label">ไฟล์ (PDF, JPG, PNG, EXCEL, WORD)</label> --}}
                                 <label class="col-sm-12 control-label">ไฟล์</label>
                                 <input type="file" name="serviceFileUpload" id="serviceFileUpload">
-                                {{-- <div class="btcd-f-wrp">
-                                        <button class="btcd-inpBtn" type="button"> <img src="" alt=""> <span>
-                                                เลือกไฟล์</span></button>
-                                        <span class="btcd-f-title">ไม่มีไฟล์ที่เลือก</span>
-                                        <small class="f-max"> (สูงสุด 100 MB)</small>
-                                        <input type="file" name="serviceFileUpload" id="serviceFileUpload">
-                                    </div>
-                                    <div class="btcd-files">
-                                    </div> --}}
                             </div>
                         </div>
                     </div>
@@ -308,16 +271,6 @@
             console.log("คะแนนที่เลือก:", container.data("selected"));
         });
     });
-
-    // $('#serviceDueDate').datetimepicker({
-    //     mask: '0000-00-00 00:00'
-    //     , format: 'Y-m-d H:i'
-    //     , formatTime: 'H:i'
-    //     , formatDate: 'Y-m-d'
-    //     , step: 30, //กำหนดค่านาทีของเวลา
-    //     lang: 'th', //กำหนดค่าเป็นภาษาไทย
-    //     // minDate: '-1970/01/01' // yesterday is minimum date
-    // });
 
     var tbl_schedule;
     show_schedule();
@@ -439,7 +392,19 @@
         } else if ($('#serviceDescription').val() == '') {
             Swal.fire({
                 title: "แจ้งเตือน!"
+                , text: "กรุณาระบุประเภทหน่วยงาน!"
+                , icon: "warning"
+            });
+        } else if ($('#departmentType').val() == '') {
+            Swal.fire({
+                title: "แจ้งเตือน!"
                 , text: "กรุณาระบุรายละเอียดที่ต้องการ!"
+                , icon: "warning"
+            });
+        } else if ($('#serviceDepartment').val() == '') {
+            Swal.fire({
+                title: "แจ้งเตือน!"
+                , text: "กรุณาระบุหน่วยงาน!"
                 , icon: "warning"
             });
         } else if ($('#serviceDepartment').val() == '') {
@@ -498,10 +463,6 @@
                             window.history.back();
                         }
                     });
-                    // Swal.fire("Success", response.message, "success");
-                    // window.history.back();
-                    // show_schedule();
-                    // $('#modal_schedule_form').modal('hide');
                 } else {
                     console.log(response);
                 }
@@ -752,30 +713,6 @@
             }
         });
     }
-
-    // $('#departmentType').change(function() {
-        
-    //     var departmentType = $('#departmentType').val();
-
-    //     $.ajax({
-    //         type: "get", url: "{{ route('admin.service_requests.departmentType') }}", 
-    //         data: {
-    //             departmentType: departmentType, 
-    //         }, 
-    //         dataType: 'json',
-    //         beforeSend: function() {}, 
-    //         success: function(response) {
-    //             if (response.status == true) {
-    //                 // console.log(response);
-    //             } else {
-    //                 // console.log(response);
-    //             }
-    //         }
-    //         , error: function(error) {
-    //             console.log(error);
-    //         }
-    //     });
-    // });
 
     $('#departmentType').change(function() {
         var departmentType = $(this).val();
