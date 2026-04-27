@@ -13,7 +13,6 @@ class ServiceStatusController extends Controller
     public function index(Request $request)
     {
         abort_unless(Gate::allows('status_access'), 403);
-
             if ($request->ajax()) {
                 $data = ServiceStatus::all();
                 $result = [];

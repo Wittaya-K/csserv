@@ -20,11 +20,12 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Response;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class ServiceRequestController extends Controller
 {
 	public function index(){
-
+		abort_unless(Gate::allows('service_request_access'), 403);
         $departments = Department::orderBy('id')->get();
         $service_assigns = ServiceAssign::orderBy('id')->get();
 		$prioritys = Priority::orderBy('id')->get();
@@ -56,6 +57,7 @@ class ServiceRequestController extends Controller
 	}
 
     public function create(){
+		abort_unless(Gate::allows('service_request_create'), 403);
         $departments = Department::orderBy('id')->get();
         $service_assigns = ServiceAssign::orderBy('id')->get();
 		$prioritys = Priority::orderBy('id')->get();
@@ -84,6 +86,7 @@ class ServiceRequestController extends Controller
 	}
 
     public function edit($id){
+        abort_unless(Gate::allows('service_request_edit'), 403);
         $serviceRequests = ServiceRequest::findOrFail($id);
         $fullName = DB::table('users')->where('username','=',$serviceRequests->serviceRecipient)->first();
         $departments = Department::orderBy('id')->get();
@@ -167,6 +170,7 @@ class ServiceRequestController extends Controller
 	}
 
     public function view($id){
+		abort_unless(Gate::allows('service_request_show'), 403);
         $serviceRequests = ServiceRequest::findOrFail($id);
         $fullName = DB::table('users')->where('username','=',$serviceRequests->serviceRecipient)->first();
         $departments = Department::orderBy('id')->get();
@@ -245,6 +249,7 @@ class ServiceRequestController extends Controller
 	}
 
 	public function list(){
+		abort_unless(Gate::allows('service_request_access'), 403);
 		// ตรวจสอบสิทธิ์การเข้าถึง
 		$roles = Auth::user()->roles;
 		foreach ($roles as $role) {
@@ -273,7 +278,7 @@ class ServiceRequestController extends Controller
 	}
 
 	public function save(Request $request, $id = ""){
-
+		abort_unless(Gate::allows('service_request_create'), 403);
 		$validator = Validator::make($request->all(), [
 			'serviceRequestNumber' => 'required',
 			'serviceName' => 'required',
@@ -443,7 +448,7 @@ class ServiceRequestController extends Controller
 	}
 
     public function update(Request $request, $id = ""){
-
+		abort_unless(Gate::allows('service_request_edit'), 403);
 		$validator = Validator::make($request->all(), [
 			'serviceRequestNumber' => 'required',
 			'serviceName' => 'required',
@@ -624,6 +629,7 @@ class ServiceRequestController extends Controller
 	}
 
 	public function selectdepartments(Request $request){
+		abort_unless(Gate::allows('service_request_access'), 403);
 		$validator = Validator::make($request->all(), [
 			'department' => 'required',
 			'service' => 'required',
@@ -667,12 +673,14 @@ class ServiceRequestController extends Controller
 	}
 
 	public function find($id){
+		abort_unless(Gate::allows('service_request_access'), 403);
 		$serviceRequest = ServiceRequest::findOrFail($id);
 
 		return response()->json(['status' => true, 'data' => $serviceRequest ]);
 	}
 
 	public function delete($id){
+		abort_unless(Gate::allows('service_request_delete'), 403);
 		$serviceRequest = ServiceRequest::findOrFail($id);
 		if($serviceRequest->delete()){
 			return response()->json(['status' => true, 'message' => 'ลบสำเร็จ!' ]);
@@ -680,7 +688,9 @@ class ServiceRequestController extends Controller
 	}
 
 	public function download($id)
-    {
+    {	
+		abort_unless(Gate::allows('service_request_access'), 403);
+
 		// Assuming you have the file path or file name based on $id
 		// $filePath = storage_path("app/public/uploads/{$id}"); // Adjust path as needed
 		$filePath = public_path("uploads/{$id}"); // Adjust path as needed
@@ -699,6 +709,7 @@ class ServiceRequestController extends Controller
 
 	public function service_status_change(Request $request)
     {
+		abort_unless(Gate::allows('service_request_edit'), 403);
 		$id = $request->input('dataId');
 
 		$serviceRequest = ServiceRequest::where('id','=',$id )->orderBy('id')->first();
@@ -788,6 +799,7 @@ class ServiceRequestController extends Controller
 
     public function serviceFlag(Request $request)
     {
+		abort_unless(Gate::allows('service_request_edit'), 403);
 		$id = $request->input('dataId');
         $flagValue = $request->input('flagValue');
         $serviceRequest = ServiceRequest::updateOrCreate(
@@ -804,6 +816,7 @@ class ServiceRequestController extends Controller
 
 	public function updateServiceRequestNote(Request $request)
 	{
+		abort_unless(Gate::allows('service_request_edit'), 403);
 		$serviceRequestId = $request->input('serviceRequestId');
 		$serviceRequestNumber = $request->input('serviceRequestNumber');
 		$serviceRequestNote = $request->input('serviceRequestNote');
@@ -825,6 +838,7 @@ class ServiceRequestController extends Controller
 
     public function serviceRequestMessage(Request $request)
 	{
+		abort_unless(Gate::allows('service_request_edit'), 403);
         $id = $request->input('dataId');
 		$serviceRequestMessage = $request->input('serviceRequestMessage');
         $serviceRequest = ServiceRequest::where('id','=',$id)->first();
@@ -866,7 +880,8 @@ class ServiceRequestController extends Controller
 	}
 
 	public function getTimeLine($id)
-	{
+	{	
+		abort_unless(Gate::allows('service_request_access'), 403);
 		$serviceRequestNotes = ServiceRequestNote::join('service_request','service_request.id','=','service_request_note.serviceRequestId')
 		->join('service_assign','service_assign.id','=','service_request.serviceName')
 		->join('users','users.username','=','service_request.serviceProvider')
@@ -881,6 +896,7 @@ class ServiceRequestController extends Controller
 
 	public function departmentType(Request $request)
 	{
+		abort_unless(Gate::allows('service_request_access'), 403);
 		$departmentType = $request->input('departmentType');
 		$data = Department::where('departmentType','=',$departmentType)->get();
 		// dd($data);
@@ -891,7 +907,9 @@ class ServiceRequestController extends Controller
 		}
 	}
 
-	public	function servicename(Request $request){
+	public	function servicename(Request $request)
+	{
+		abort_unless(Gate::allows('service_request_access'), 403);
 		$serviceProvider = $request->input('serviceProvider');
 		$data = ServiceAssign::where('serviceProvider','=',$serviceProvider)->get();
 		// dd($data);
@@ -904,6 +922,7 @@ class ServiceRequestController extends Controller
 
 	public function getNextOrderNumber()
 	{
+		abort_unless(Gate::allows('service_request_access'), 403);
 		// Get the last created order
 		// $lastOrder = Order::orderBy('created_at', 'desc')->first();
 		$lastOrder = ServiceAssign::orderBy('id')->first();

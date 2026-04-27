@@ -79,6 +79,7 @@ class ServiceAssignController extends Controller
     }
     
     public function find($id){
+        abort_unless(Gate::allows('service_assign_access'), 403);
 		$schedule = ServiceAssign::findOrFail($id);
 		return response()->json(['status' => true, 'data' => $schedule ]);
 	}
