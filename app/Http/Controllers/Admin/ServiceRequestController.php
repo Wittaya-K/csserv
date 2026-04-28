@@ -24,941 +24,833 @@ use Illuminate\Support\Facades\Gate;
 
 class ServiceRequestController extends Controller
 {
-	public function index(){
-		abort_unless(Gate::allows('service_request_access'), 403);
-        $departments = Department::orderBy('id')->get();
-        $service_assigns = ServiceAssign::orderBy('id')->get();
-		$prioritys = Priority::orderBy('id')->get();
-		$users = DB::table('users')->where('username','!=',NULL)->get();
-		$servicesStatus = ServiceStatus::orderBy('id')->get();
-		$serviceRequest = serviceRequest::orderByDesc('id')->first();
-        // $serviceRequestId = $serviceRequest->id; // 'EQ-000001'
-        $serviceRequestId = 0;
-        if ($serviceRequestId) {
+    // ============================================================
+    // LAYER 1: Authentication — middleware('auth') ใน web.php ✅
+    // LAYER 2: Gate::allows  — permission check ทุก method ✅
+    // LAYER 3: Ownership     — scoped query ตาม role ✅
+    // LAYER 4: Input/Output  — validate + only() + path traversal ✅
+    // ============================================================
 
-            // Extract the numeric part from the last equipment ID
-            $lastId = intval(substr($serviceRequest->id, 3));
-
-            // Increment the numeric part by one
-            $newId = $lastId + 1;
-
-            // Format the new ID back into the "EQ-000001" format
-            $serviceRequestId = 'RQ' . str_pad($newId, 6, '0', STR_PAD_LEFT);
-        } else {
-            // If no equipment ID exists, start with the first ID
-            $serviceRequestId = '0001';
-        }
-
-		$today = date("dmY");
-		$rand = sprintf("%04d", rand(0,9999));
-		$requestId = $today . $serviceRequestId;
-
-		return view('admin.service_requests.index',compact('departments','service_assigns','requestId','prioritys','users','servicesStatus'));
-	}
-
-    public function create(){
-		abort_unless(Gate::allows('service_request_create'), 403);
-        $departments = Department::orderBy('id')->get();
-        $service_assigns = ServiceAssign::orderBy('id')->get();
-		$prioritys = Priority::orderBy('id')->get();
-		$users = DB::table('users')->where('username','!=',NULL)->get();
-        $staffUsers = DB::table('users')
-                    ->join('role_user', 'users.id', '=', 'role_user.user_id')
-                    ->join('roles', 'role_user.role_id', '=', 'roles.id')
-                    ->where('roles.title', 'Staff')
-                    ->orWhere('roles.title', 'Admin')
-                    ->whereNotNull('users.username')
-                    ->select('users.*')
-                    ->get();
-		$servicesStatus = ServiceStatus::orderBy('id')->get();
-		$serviceRequest = serviceRequest::orderByDesc('id')->first();
-        if($serviceRequest == null){
-            $serviceRequestId = "001";
-        }else{
-            $serviceRequestId = "00000".$serviceRequest->id + 1;
-        }
-
-		$today = date("dmY");
-		$rand = sprintf("%04d", rand(0,9999));
-		$requestId = $today . $serviceRequestId;
-
-		return view('admin.service_requests.create',compact('departments','service_assigns','requestId','prioritys','users','servicesStatus','staffUsers'));
-	}
-
-    public function edit($id){
-        abort_unless(Gate::allows('service_request_edit'), 403);
-        $serviceRequests = ServiceRequest::findOrFail($id);
-        $fullName = DB::table('users')->where('username','=',$serviceRequests->serviceRecipient)->first();
-        $departments = Department::orderBy('id')->get();
-        $service_assigns = ServiceAssign::orderBy('id')->get();
-		$prioritys = Priority::orderBy('id')->get();
-		$users = DB::table('users')->where('username','!=',NULL)->get();
-		$staffUsers = DB::table('users')
-				->join('role_user', 'users.id', '=', 'role_user.user_id')
-				->join('roles', 'role_user.role_id', '=', 'roles.id')
-				->where('roles.title', 'Staff')
-				->orWhere('roles.title', 'Admin')
-				->whereNotNull('users.username')
-				->select('users.*')
-				->get();
-		$servicesStatus = ServiceStatus::orderBy('id')->get();
-		$serviceRequest = serviceRequest::orderByDesc('id')->first();
-		$serviceRequestName = serviceRequest::select('serviceRequestName')->where('serviceRequestNumber','=',$serviceRequest->serviceRequestNumber)->first();
-        $serviceRequestHistory = ServiceRequestHistory::where('reqid','=',$id)->get();
-        $ServiceRequestMessages = ServiceRequestMessage::where('reqid','=',$id)->get();
-        $serviceRequestHistorys = ServiceRequestHistory::where('reqid','=',$id)->first();
-        $serviceRequestHistoryServiceName = '';
-        $serviceRequestHistoryDateTime = '';
-        $serviceRequestHistoryDateTimeUpdate = '';
-        $serviceRequestHistoryDayAmounts = 0;
-        $chatTitle = '';
-
-        foreach ($service_assigns as $service_assign) {
-            if($serviceRequests->serviceName == $service_assign->id){
-                $chatTitle = $service_assign->serviceName;
-            }
-        }
-        if($serviceRequestHistorys != null){
-            foreach ($service_assigns as $service_assign) {
-                if($serviceRequestHistorys->serviceHistoryName == $service_assign->id){
-                    $serviceRequestHistoryServiceName = $service_assign->serviceName;
-                }
-            }
-            // หาจำนวนวันที่ผ่านไปตั้งแต่วันที่บันทึกประวัติการให้บริการจาก service_request_history
-            $serviceRequestHistoryDateTime  = Carbon::parse($serviceRequestHistorys->serviceHistoryDateTime);
-            $serviceRequestHistoryDateTimeUpdate  = Carbon::parse($serviceRequestHistorys->updated_at);
-            $serviceRequestHistoryDayAmounts = $serviceRequestHistoryDateTime->diffInDays($serviceRequestHistoryDateTimeUpdate);
-        }
-
-        // หาจำนวนวันที่ผ่านไปตั้งแต่วันที่บันทึกประวัติการให้บริการจาก service_request
-        $serviceDateTime  = Carbon::parse($serviceRequests->serviceDateTime);
-        $updated_at  = Carbon::parse($serviceRequests->updated_at);
-        $dayAmounts = $serviceDateTime->diffInDays($updated_at);
-        $serviceDueDate = $serviceRequests->serviceDateTime; // วันที่ต้องการใช้บริการ
-        if($dayAmounts <= 1){
-            $priorityName = 'ด่วนที่สุด';
-        }elseif($dayAmounts <= 3){
-            $priorityName = 'ด่วนมาก';
-        }elseif($dayAmounts <= 7){
-            $priorityName = 'ด่วน';
-        }elseif($dayAmounts <= 14){
-            $priorityName = 'ปกติ';
-        }elseif($dayAmounts <= 30){
-            $priorityName = 'ปกติ';
-        }elseif($dayAmounts <= 60){
-            $priorityName = 'ปกติ';
-        }
-
-        if($serviceRequestHistoryDayAmounts <= 1){
-            $serviceRequestHistoryDayAmountsPriorityName = 'ด่วนที่สุด';
-        }elseif($serviceRequestHistoryDayAmounts <= 3){
-            $serviceRequestHistoryDayAmountsPriorityName = 'ด่วนมาก';
-        }elseif($serviceRequestHistoryDayAmounts <= 7){
-            $serviceRequestHistoryDayAmountsPriorityName = 'ด่วน';
-        }elseif($serviceRequestHistoryDayAmounts <= 14){
-            $serviceRequestHistoryDayAmountsPriorityName = 'ปกติ';
-        }elseif($serviceRequestHistoryDayAmounts <= 30){
-            $serviceRequestHistoryDayAmountsPriorityName = 'ปกติ';
-        }elseif($serviceRequestHistoryDayAmounts <= 60){
-            $serviceRequestHistoryDayAmountsPriorityName = 'ปกติ';
-        }
-
-        $requestId = $serviceRequest->serviceRequestNumber;
-		$requestName = $serviceRequestName->serviceRequestName;
-
-		return view('admin.service_requests.edit',compact('departments','service_assigns','requestId','prioritys','users','servicesStatus','serviceRequests','chatTitle','serviceRequestHistory','ServiceRequestMessages','serviceRequestHistoryServiceName','priorityName','serviceRequestHistoryDayAmountsPriorityName','fullName','serviceDueDate','staffUsers','requestName'));
-	}
-
-    public function view($id){
-		abort_unless(Gate::allows('service_request_show'), 403);
-        $serviceRequests = ServiceRequest::findOrFail($id);
-        $fullName = DB::table('users')->where('username','=',$serviceRequests->serviceRecipient)->first();
-        $departments = Department::orderBy('id')->get();
-        $service_assigns = ServiceAssign::orderBy('id')->get();
-		$prioritys = Priority::orderBy('id')->get();
-		$users = DB::table('users')->where('username','!=',NULL)->get();
-		$servicesStatus = ServiceStatus::orderBy('id')->get();
-		$serviceRequest = serviceRequest::where('id','=',$id)->orderByDesc('id')->first();
-        $serviceRequestHistory = ServiceRequestHistory::where('reqid','=',$id)->get();
-        $ServiceRequestMessages = ServiceRequestMessage::where('reqid','=',$id)->get();
-        $serviceRequestHistorys = ServiceRequestHistory::where('reqid','=',$id)->first();
-        $serviceProviders = ServiceProvider::orderBy('id')->get();
-        $serviceRequestHistoryServiceName = '';
-        $serviceRequestHistoryDateTime = '';
-        $serviceRequestHistoryDateTimeUpdate = '';
-        $serviceRequestHistoryDayAmounts = 0;
-
-        $chatTitle = '';
-        foreach ($service_assigns as $service_assign) {
-            if($serviceRequests->serviceName == $service_assign->id){
-                $chatTitle = $service_assign->serviceName;
-            }
-        }
-        if($serviceRequestHistorys != null){
-            foreach ($service_assigns as $service_assign) {
-                if($serviceRequestHistorys->serviceHistoryName == $service_assign->id){
-                    $serviceRequestHistoryServiceName = $service_assign->serviceName;
-                }
-            }
-            // หาจำนวนวันที่ผ่านไปตั้งแต่วันที่บันทึกประวัติการให้บริการจาก service_request_history
-            $serviceRequestHistoryDateTime  = Carbon::parse($serviceRequestHistorys->serviceHistoryDateTime);
-            $serviceRequestHistoryDateTimeUpdate  = Carbon::parse($serviceRequestHistorys->updated_at);
-            $serviceRequestHistoryDayAmounts = $serviceRequestHistoryDateTime->diffInDays($serviceRequestHistoryDateTimeUpdate);
-        }
-        // หาจำนวนวันที่ผ่านไปตั้งแต่วันที่บันทึกประวัติการให้บริการจาก service_request
-        $serviceDateTime  = Carbon::parse($serviceRequests->serviceDateTime);
-        $updated_at  = Carbon::parse($serviceRequests->updated_at);
-        $dayAmounts = $serviceDateTime->diffInDays($updated_at);
-
-        if($dayAmounts <= 1){
-            $priorityName = 'ด่วนที่สุด';
-        }elseif($dayAmounts <= 3){
-            $priorityName = 'ด่วนมาก';
-        }elseif($dayAmounts <= 7){
-            $priorityName = 'ด่วน';
-        }elseif($dayAmounts <= 14){
-            $priorityName = 'ปกติ';
-        }elseif($dayAmounts <= 30){
-            $priorityName = 'ปกติ';
-        }elseif($dayAmounts <= 60){
-            $priorityName = 'ปกติ';
-        }
-
-        if($serviceRequestHistoryDayAmounts <= 1){
-            $serviceRequestHistoryDayAmountsPriorityName = 'ด่วนที่สุด';
-        }elseif($serviceRequestHistoryDayAmounts <= 3){
-            $serviceRequestHistoryDayAmountsPriorityName = 'ด่วนมาก';
-        }elseif($serviceRequestHistoryDayAmounts <= 7){
-            $serviceRequestHistoryDayAmountsPriorityName = 'ด่วน';
-        }elseif($serviceRequestHistoryDayAmounts <= 14){
-            $serviceRequestHistoryDayAmountsPriorityName = 'ปกติ';
-        }elseif($serviceRequestHistoryDayAmounts <= 30){
-            $serviceRequestHistoryDayAmountsPriorityName = 'ปกติ';
-        }elseif($serviceRequestHistoryDayAmounts <= 60){
-            $serviceRequestHistoryDayAmountsPriorityName = 'ปกติ';
-        }
-
-        if($serviceRequest == null){
-            // $serviceRequestId = $serviceRequest->id + 1;
-            $serviceRequestId = $id + 1;
-        }
-
-        $requestId = $serviceRequest->serviceRequestNumber;
-
-		return view('admin.service_requests.view',compact('departments','service_assigns','requestId','prioritys','users','servicesStatus','serviceRequests','chatTitle','serviceRequestHistory','ServiceRequestMessages','serviceRequestHistoryServiceName','priorityName','serviceRequestHistoryDayAmountsPriorityName','fullName','serviceProviders'));
-	}
-
-	public function list(){
-		abort_unless(Gate::allows('service_request_access'), 403);
-		// ตรวจสอบสิทธิ์การเข้าถึง
-		$roles = Auth::user()->roles;
-		foreach ($roles as $role) {
-			if($role->title == 'Admin'){
-				// ตรวจสอบว่าผู้ใช้มีสิทธิ์เข้าถึงคำขอที่เป็นของตนเอง
-				$serviceRequest = ServiceRequest::get();
-			}
-			if($role->title == 'Staff'){
-				// ตรวจสอบว่าผู้ใช้มีสิทธิ์เข้าถึงคำขอที่เป็นของตนเอง
-                $serviceRequest = ServiceRequest::whereIn('id', function($query) {
-                    $query->select('reqid')
-                        ->from('service_provider')
-                        ->where('serviceProvider', Auth::user()->username);
-                })->get();
-			}
-			if($role->title == 'User'){
-				// ตรวจสอบว่าผู้ใช้มีสิทธิ์เข้าถึงคำขอที่เป็นของตนเอง
-				$serviceRequest = ServiceRequest::where('serviceRecipient','=',Auth::user()->username)->get();
-			}
-			if($role->title == 'Executive'){
-				// ตรวจสอบว่าผู้ใช้มีสิทธิ์เข้าถึงคำขอที่เป็นของตนเอง
-				$serviceRequest = ServiceRequest::where('serviceRecipient','=',Auth::user()->username)->get();
-			}
-		}
-		return response()->json(['status' => true, 'data' => $serviceRequest ]);
-	}
-
-	public function save(Request $request, $id = ""){
-		abort_unless(Gate::allows('service_request_create'), 403);
-		$validator = Validator::make($request->all(), [
-			'serviceRequestNumber' => 'required',
-			'serviceName' => 'required',
-			'serviceDepartment' => 'required',
-			'serviceRecipient' => 'required',
-		]);
-
-		if($validator->fails()){
-			return response()->json(['status' => false, 'error' => $validator->errors() ]);
-		}else{
-			$departmentName = Department::where('id','=',$request->input('serviceDepartment'))->orderBy('id')->first();
-			// $priorityName = Priority::where('priorityStatus','=',$request->input('servicePriority'))->orderBy('id')->first();
-			$serviceName = DB::table('service_assign')->where('id','=',$request->input('serviceName'))->orderBy('id')->first();
-
-			
-			if($request->file('serviceFileUpload') != null){
-				$file = $request->file('serviceFileUpload');
-				// Check if multiple files are uploaded
-				if (is_array($file)) {
-					// Loop through each file and get the original name
-					$fileNames = [];
-					foreach ($file as $singleFile) {
-						$fileName = $singleFile->getClientOriginalName();
-						$fileNames[] = $singleFile->getClientOriginalName();
-						// $singleFile->storeAs('public/uploads', $fileName);
-						$singleFile->move(public_path('uploads'), $fileName);
-					}
-					// Join file names with commas if you want a single string
-					$fileName = implode(',', $fileNames);
-				} else {
-					// Single file upload
-					$fileName = $file->getClientOriginalName();
-					$path = public_path('uploads' . $fileName);
-					$file->move(public_path('uploads'), $fileName);
-					$path = public_path('uploads/' . $fileName);
-				}
-			} else {
-				$fileName = '-';
-			}
-
-			$serviceDepartment = $request->input('serviceDepartment');
-			$departmentType = $request->input('departmentType');
-			$requestName = $request->input('request_name');
-
-			if($serviceDepartment == 'etc'){
-				$departments = Department::updateOrCreate(
-					[
-						'id' => $request->input('departmentId'),
-					],
-					[
-						'departmentName' => $request->input('departmentName'),
-						'departmentType' => $request->input('departmentType'),
-				]);
-
-				$departmentName = Department::orderBy('id','desc')->first(); // ดึงหน่วยงานที่เพิ่มใหม่
-				$departmentName->id; // หน่วยงานที่ให้บริการใหม่
-				$departmentType; //// หน่วยงานภายในหรือภายนอกใหม่
-
-				if($departments){ // ถ้าเพิ่มหน่วยงานใหม่สำเร็จ
-					// บันทึกคำขอใช้บริการ
-					$serviceRequest = ServiceRequest::updateOrCreate(
-						[
-							'id' => $request->input('id'),
-						],
-						[
-							'serviceRequestNumber' => $request->input('serviceRequestNumber'), // หมายเลขคำขอ
-							'serviceDescription' => $request->input('serviceDescription'), // รายละเอียดคำขอ
-							'serviceName' => $request->input('serviceName'), // ชื่องานบริการ
-							'serviceDepartment' => $departmentName->id, // หน่วยงานที่ให้บริการ
-							'serviceDepartmentType' => $departmentType, // หน่วยงานภายในหรือภายนอก
-							'serviceRequestName' => $requestName, //ระบุผู้ขอใช้บริการ
-							'serviceFileUpload' => $fileName, // ไฟล์แนบ
-							'serviceStatus' => 'pending', // สถานะคำขอ
-							'serviceDateTime' => Carbon::now(),
-							'servicePriority' => null, // ชั้นความเร็ว
-							'serviceRecipient' => $request->input('serviceRecipient'), // ผู้ใช้บริการ
-							'serviceProvider' => null, // ผู้ให้บริการ
-					]);
-				}
-			} else {
-                $serviceProviderCount   = count($request->input('serviceProvider'));
-                $serviceProviderArray   = $request->input('serviceProvider');
-                $serviceProvider        = $request->input('serviceProvider');
-
-                $serviceRequest = ServiceRequest::updateOrCreate(
-					[
-						'id' => $request->input('id'),
-					],
-					[
-						'serviceRequestNumber' => $request->input('serviceRequestNumber'),
-						'serviceDescription' => $request->input('serviceDescription'),
-						'serviceName' => $request->input('serviceName'),
-						'serviceDepartment' => $request->input('serviceDepartment'),
-						'serviceDepartmentType' => $departmentName->departmentType,
-						'serviceRequestName' => $requestName, //ระบุผู้ขอใช้บริการ
-						'serviceFileUpload' => $fileName,
-						'serviceStatus' => 'pending',
-						'serviceDateTime' => Carbon::now(),
-						'servicePriority' => null,
-						'serviceRecipient' => $request->input('serviceRecipient'),
-						'serviceProvider' => null,
-				]);
-                if($serviceRequest){
-                    $reqid = ServiceRequest::orderBy('created_at','desc')->first();
-                    if($serviceProviderCount == 1){
-                            ServiceProvider::updateOrCreate(
-                                [
-                                    'id' => $request->input('id'),
-                                ],
-                                [
-                                    'reqid' => $reqid->id,
-                                    'serviceProvider' => $serviceProvider[0],
-                            ]);
-                    } else {
-                        foreach ($serviceProviderArray as $provider) {
-                            $serviceProvider = $provider;
-                            ServiceProvider::updateOrCreate(
-                                [
-                                    'id' => $request->input('id'),
-                                ],
-                                [
-                                    'reqid' => $reqid->id,
-                                    'serviceProvider' => $serviceProvider,
-                            ]);
-                        }
-                    }
-                }
-			}
-
-			$name = Auth()->user()->name;
-			$email = Auth()->user()->email;
-
-			if($serviceRequest){ // ถ้าเพิ่มคำขอใช้บริการสำเร็จ
-				$details = [
-					'message'           => 'ระบบขอใช้บริการ',
-					'to'                => $name,
-					'serviceRequestNumber' => $request->input('serviceRequestNumber'),
-					'serviceDescription' 	=> $request->input('serviceDescription'),
-					'serviceName' 		=> $serviceName->serviceName,
-					'serviceDepartment' => $departmentName->departmentName,
-					'serviceDepartmentType' => $departmentName->departmentType,
-					'serviceFileUpload' => $fileName,
-					'serviceStatus' 	=> 'pending',
-					'serviceDateTime' 	=> Carbon::now(),
-					'servicePriority' 	=> null,
-					'serviceRecipient' 	=> $request->input('serviceRecipient'),
-					'serviceProvider' 	=> $serviceName->serviceProvider,
-					'messageContact'    => 'หากมีข้อสงสัยเพิ่มเติม กรุณาติดต่อที่อีเมล',
-					'mail'              => 'wittaya.kh@psu.ac.th',
-					'regard'            => 'ขอแสดงความนับถือ',
-					'itsupport'         => 'วิทยา ควรวิไลย',
-					'position'          => 'นักวิชาการคอมพิวเตอร์',
-					'workgroup'         => 'สาขาวิทยาศาสตร์การคำนวณ',
-					'faucultySci'       => 'คณะวิทยาศาสตร์ มหาวิทยาลัยสงขลานครินทร์',
-					'more'              => 'ดูรายละเอียดเพิ่มเติม',
-					'tel'               => '093-639-8064',
-					'cookie_policy'     => 'ข้อกำหนดการใช้งาน',
-					'privacy_policy'    => 'นโยบายความเป็นส่วนตัว',
-				];
-
-				// ส่งอีเมลแจ้งเตือน
-				// Mail::send(new SendEmail($details,$email,$fileName));
-
-				return response()->json(['status' => true, 'message' => 'บันทึกสำเร็จ!']);
-			}
-		}
-	}
-
-    public function update(Request $request, $id = ""){
-		abort_unless(Gate::allows('service_request_edit'), 403);
-		$validator = Validator::make($request->all(), [
-			'serviceRequestNumber' => 'required',
-			'serviceName' => 'required',
-			'serviceDepartment' => 'required',
-			// 'servicePriority' => 'required',
-			'serviceRecipient' => 'required',
-		]);
-
-		if($validator->fails()){
-			return response()->json(['status' => false, 'error' => $validator->errors() ]);
-		}else{
-			$departmentName = Department::where('id','=',$request->input('serviceDepartment'))->orderBy('id')->first();
-			// $priorityName = Priority::where('priorityStatus','=',$request->input('servicePriority'))->orderBy('id')->first();
-			$serviceName = DB::table('service_assign')->where('id','=',$request->input('serviceName'))->orderBy('id')->first();
-
-			if($request->file('serviceFileUpload') != null){
-				$file = $request->file('serviceFileUpload');
-				// Check if multiple files are uploaded
-				if (is_array($file)) {
-					// Loop through each file and get the original name
-					$fileNames = [];
-					foreach ($file as $singleFile) {
-						$fileName = $singleFile->getClientOriginalName();
-						$fileNames[] = $singleFile->getClientOriginalName();
-						// $singleFile->storeAs('public/uploads', $fileName);
-						$singleFile->move(public_path('uploads'), $fileName);
-					}
-					// Join file names with commas if you want a single string
-					$fileName = implode(',', $fileNames);
-				} else {
-					// Single file upload
-					$fileName = $file->getClientOriginalName();
-					$path = public_path('uploads' . $fileName);
-					$file->move(public_path('uploads'), $fileName);
-					$path = public_path('uploads/' . $fileName);
-				}
-			} else {
-				$fileName = '-';
-			}
-
-			$serviceDepartment = $request->input('serviceDepartment');
-			$departmentType = $request->input('departmentType');
-			$requestName = $request->input('request_name');
-
-			if($serviceDepartment == 'etc'){
-				$departments = Department::updateOrCreate(
-					[
-						'id' => $request->input('departmentId'),
-					],
-					[
-						'departmentName' => $request->input('departmentName'),
-						'departmentType' => $request->input('departmentType'),
-				]);
-
-				$departmentName = Department::orderBy('id','desc')->first(); // ดึงหน่วยงานที่เพิ่มใหม่
-				$departmentName->id; // หน่วยงานที่ให้บริการใหม่
-				$departmentType; //// หน่วยงานภายในหรือภายนอกใหม่
-
-				if($departments){ // ถ้าเพิ่มหน่วยงานใหม่สำเร็จ
-                    $serviceRequests = ServiceRequest::where('id','=',$request->input('id'))->get();
-                    foreach ($serviceRequests as $serviceRequest) {
-                        ServiceRequestHistory::create(
-                            [
-                                'reqid' => $serviceRequest->id,
-                                'serviceRequestHistoryNumber' => $serviceRequest->serviceRequestNumber,
-                                'serviceHistoryDescription' => $serviceRequest->serviceDescription,
-                                'serviceHistoryName' => $serviceRequest->serviceName,
-                                'serviceHistoryDepartment' => $serviceRequest->serviceDepartment,
-                                'serviceHistoryDepartmentType' => $serviceRequest->serviceDepartmentType,
-								'serviceRequestName' => $requestName, //ระบุผู้ขอใช้บริการ
-                                'serviceHistoryFileUpload' => $serviceRequest->serviceFileUpload,
-                                'serviceHistoryStatus' => $serviceRequest->serviceStatus,
-                                'serviceHistoryDateTime' =>$serviceRequest->serviceDateTime,
-                                'serviceHistoryPriority' => null,
-                                'serviceHistoryRecipient' => $serviceRequest->serviceRecipient,
-                                'serviceHistoryProvider' => $serviceRequest->serviceProvider,
-                        ]);
-                    }
-					// บันทึกคำขอใช้บริการ
-					$serviceRequest = ServiceRequest::updateOrCreate(
-						[
-							'id' => $request->input('id'),
-						],
-						[
-							'serviceRequestNumber' => $request->input('serviceRequestNumber'), // หมายเลขคำขอ
-							'serviceDescription' => $request->input('serviceDescription'), // รายละเอียดคำขอ
-							'serviceName' => $request->input('serviceName'), // ชื่องานบริการ
-							'serviceDepartment' => $departmentName->id, // หน่วยงานที่ให้บริการ
-							'serviceDepartmentType' => $departmentType, // หน่วยงานภายในหรือภายนอก
-							'serviceRequestName' => $requestName, //ระบุผู้ขอใช้บริการ
-							'serviceFileUpload' => $fileName, // ไฟล์แนบ
-							'serviceStatus' => 'pending', // สถานะคำขอ
-							'serviceDateTime' => Carbon::now(),
-							'servicePriority' => null, // ชั้นความเร็ว
-							'serviceRecipient' => $request->input('serviceRecipient'), // ผู้ใช้บริการ
-							// 'serviceProvider' => $serviceName->serviceProvider, // ผู้ให้บริการ
-                            'serviceProvider' => null, // ผู้ให้บริการ
-					]);
-				}
-			} else {
-                $serviceRequests = ServiceRequest::where('id','=',$request->input('id'))->get();
-                foreach ($serviceRequests as $serviceRequest) {
-                    ServiceRequestHistory::create(
-                        [
-                            'reqid' => $serviceRequest->id,
-                            'serviceRequestHistoryNumber' => $serviceRequest->serviceRequestNumber,
-                            'serviceHistoryDescription' => $serviceRequest->serviceDescription,
-                            'serviceHistoryName' => $serviceRequest->serviceName,
-                            'serviceHistoryDepartment' => $serviceRequest->serviceDepartment,
-                            'serviceHistoryDepartmentType' => $serviceRequest->serviceDepartmentType,
-							'serviceRequestName' => $requestName, //ระบุผู้ขอใช้บริการ
-                            'serviceHistoryFileUpload' => $serviceRequest->serviceFileUpload,
-                            'serviceHistoryStatus' => $serviceRequest->serviceStatus,
-                            'serviceHistoryDateTime' =>$serviceRequest->serviceDateTime,
-                            'serviceHistoryPriority' => null,
-                            'serviceHistoryRecipient' => $serviceRequest->serviceRecipient,
-                            // 'serviceHistoryProvider' => $serviceRequest->serviceProvider,
-                            'serviceProvider' => null, // ผู้ให้บริการ
-                    ]);
-                }
-				$serviceRequest = ServiceRequest::updateOrCreate(
-					[
-						'id' => $request->input('id'),
-					],
-					[
-						'serviceRequestNumber' => $request->input('serviceRequestNumber'),
-						'serviceDescription' => $request->input('serviceDescription'),
-						'serviceName' => $request->input('serviceName'),
-						'serviceDepartment' => $request->input('serviceDepartment'),
-						'serviceDepartmentType' => $departmentName->departmentType,
-						'serviceRequestName' => $requestName, //ระบุผู้ขอใช้บริการ
-						'serviceFileUpload' => $fileName,
-						'serviceStatus' => 'pending',
-						'serviceDateTime' => Carbon::now(),
-						'servicePriority' => null,
-						'serviceRecipient' => $request->input('serviceRecipient'),
-						'serviceProvider' => $serviceName->serviceProvider,
-				]);
-			}
-
-			$name = Auth()->user()->name;
-			$email = Auth()->user()->email;
-
-			if($serviceRequest){ // ถ้าเพิ่มคำขอใช้บริการสำเร็จ
-				$details = [
-					'message'           => 'ระบบขอใช้บริการ',
-					'to'                => $name,
-					'serviceRequestNumber' => $request->input('serviceRequestNumber'),
-					'serviceDescription' 	=> $request->input('serviceDescription'),
-					'serviceName' 		=> $serviceName->serviceName,
-					'serviceDepartment' => $departmentName->departmentName,
-					'serviceDepartmentType' => $departmentName->departmentType,
-					'serviceFileUpload' => $fileName,
-					'serviceStatus' 	=> 'pending',
-					'serviceDateTime' 	=> Carbon::now(),
-					'servicePriority' 	=> null,
-					'serviceRecipient' 	=> $request->input('serviceRecipient'),
-					'serviceProvider' 	=> $serviceName->serviceProvider,
-					'messageContact'    => 'หากมีข้อสงสัยเพิ่มเติม กรุณาติดต่อที่อีเมล',
-					'mail'              => 'wittaya.kh@psu.ac.th',
-					'regard'            => 'ขอแสดงความนับถือ',
-					'itsupport'         => 'วิทยา ควรวิไลย',
-					'position'          => 'นักวิชาการคอมพิวเตอร์',
-					'workgroup'         => 'สาขาวิทยาศาสตร์การคำนวณ',
-					'faucultySci'       => 'คณะวิทยาศาสตร์ มหาวิทยาลัยสงขลานครินทร์',
-					'more'              => 'ดูรายละเอียดเพิ่มเติม',
-					'tel'               => '093-639-8064',
-					'cookie_policy'     => 'ข้อกำหนดการใช้งาน',
-					'privacy_policy'    => 'นโยบายความเป็นส่วนตัว',
-				];
-
-				// ส่งอีเมลแจ้งเตือน
-				// Mail::send(new SendEmail($details,$email,$fileName));
-
-				return response()->json(['status' => true, 'message' => 'บันทึกสำเร็จ!']);
-			}
-		}
-	}
-
-	public function selectdepartments(Request $request){
-		abort_unless(Gate::allows('service_request_access'), 403);
-		$validator = Validator::make($request->all(), [
-			'department' => 'required',
-			'service' => 'required',
-		]);
-
-		if($validator->fails()){
-			return response()->json(['status' => false, 'error' => $validator->errors() ]);
-		}else{
-
-			$service_id = $request->input('service');
-			$assign_tasks = DB::table('assign_tasks')->get();
-			$arr_username = [];
-			foreach ($assign_tasks as $assign_tasks_item) {
-				$usernames = $assign_tasks->filter(function ($item) use ($service_id){
-					return in_array($service_id, explode(',', $item->service_id));
-				})->pluck('username')->all();
-				$arr_username = $usernames;
-			}
-
-			$department = $request->input('department');
-			$department_id = DB::table('department')->where('department_name',$department)->first();
-			$department_id = $department_id->id;
-			$assigntasks = DB::table('assign_tasks')->get();
-
-			foreach ($assigntasks as $assigntask) {
-				$usernameDepartment = $assigntasks->filter(function ($item) use ($department_id){
-					return in_array($department_id, explode(',', $item->department_id));
-				})->pluck('username')->all();
-			}
-
-			// เช็คว่า username มีงานที่รับผิดชอบตรงกับหลักสูตรหรือไม่
-			$users = DB::table('users')->where('username','=',$arr_username[0])->first();
-			$data = [
-				'status' => true,
-				'message' => 'บันทึกสำเร็จ!',
-				'data' => ['services' => $users->name],
-			];
-
-			return response()->json(['status' => true, 'data' => $data ]);
-		}
-	}
-
-	public function find($id){
-		abort_unless(Gate::allows('service_request_access'), 403);
-		$serviceRequest = ServiceRequest::findOrFail($id);
-
-		return response()->json(['status' => true, 'data' => $serviceRequest ]);
-	}
-
-	public function delete($id){
-		abort_unless(Gate::allows('service_request_delete'), 403);
-		$serviceRequest = ServiceRequest::findOrFail($id);
-		if($serviceRequest->delete()){
-			return response()->json(['status' => true, 'message' => 'ลบสำเร็จ!' ]);
-		}
-	}
-
-	public function download($id)
-    {	
-		abort_unless(Gate::allows('service_request_access'), 403);
-
-		// Assuming you have the file path or file name based on $id
-		// $filePath = storage_path("app/public/uploads/{$id}"); // Adjust path as needed
-		$filePath = public_path("uploads/{$id}"); // Adjust path as needed
-		// dd($filePath);
-		if (!file_exists($filePath)) {
-			abort(404, 'File not found');
-		}
-
-		// Dynamically get the MIME type
-		$mimeType = mime_content_type($filePath);
-
-		return Response::download($filePath, basename($filePath), [
-			'Content-Type' => $mimeType,
-		]);
-    }
-
-	public function service_status_change(Request $request)
+    // ----------------------------------------------------------------
+    // Helper: ดึง ServiceRequest โดย scope ตาม role อัตโนมัติ
+    // ใช้ทดแทนการเขียน foreach role ซ้ำหลายจุด
+    // ----------------------------------------------------------------
+    private function scopedQuery()
     {
-		abort_unless(Gate::allows('service_request_edit'), 403);
-		$id = $request->input('dataId');
+        $user  = Auth::user();
+        $roles = $user->roles->pluck('title');
 
-		$serviceRequest = ServiceRequest::where('id','=',$id )->orderBy('id')->first();
-		// $priorityName = Priority::where('priorityStatus','=',$serviceRequest->servicePriority)->orderBy('id')->first();
-		$serviceName = ServiceAssign::where('id','=',$serviceRequest->serviceName)->orderBy('id')->first();
-		$departmentName = Department::where('id','=',$serviceRequest->serviceDepartment)->orderBy('id')->first();
-		$serviceRecipient = User::where('username','=',$serviceRequest->serviceRecipient)->orderBy('id')->first();
-		$serviceProvider = User::where('username','=',$serviceRequest->serviceProvider)->orderBy('id')->first();
-
-		$serviceRequest->serviceRequestNumber; // หมายเลขคำขอ
-		$serviceName->serviceName; // งานบริการที
-		$serviceRequest->serviceDescription;
-		// $priorityName->priorityName; // ชั้นความเร็ว
-		$departmentName->departmentName; // หน่วยงานที่ให้บริการ
-		$serviceRequest->serviceDateTime; // วันที่และเวลาที่คำขอใช้บริการ
-		$serviceRecipient->name; // ผู้ขอใช้บริการ
-		$serviceStatus = $request->input('serviceStatus'); // สถานะคำขอ
-
-        $serviceRequests = ServiceRequest::where('id','=',$id)->get();
-        foreach ($serviceRequests as $serviceRequest) {
-            ServiceRequestHistory::create(
-                [
-                    'serviceRequestHistoryNumber' => $serviceRequest->serviceRequestNumber,
-                    'serviceHistoryDescription' => $serviceRequest->serviceDescription,
-                    'serviceHistoryName' => $serviceRequest->serviceName,
-                    'serviceHistoryDepartment' => $serviceRequest->serviceDepartment,
-                    'serviceHistoryDepartmentType' => $serviceRequest->serviceDepartmentType,
-                    'serviceHistoryFileUpload' => $serviceRequest->serviceFileUpload,
-                    'serviceHistoryStatus' => $serviceRequest->serviceStatus,
-                    'serviceHistoryDateTime' => $serviceRequest->serviceDateTime,
-                    'serviceHistoryPriority' => null,
-                    'serviceHistoryRecipient' => $serviceRequest->serviceRecipient,
-                    'serviceHistoryProvider' => $serviceRequest->serviceProvider,
-            ]);
+        if ($roles->contains('Admin')) {
+            return ServiceRequest::query();
         }
 
-		$serviceRequest = ServiceRequest::updateOrCreate(
-			[
-				'id' => $request->input('dataId'),
-			],
-			[
-			'serviceStatus' => $request->input('serviceStatus'),
-		]);
+        if ($roles->contains('Staff')) {
+            return ServiceRequest::whereIn('id', function ($q) use ($user) {
+                $q->select('reqid')
+                  ->from('service_provider')
+                  ->where('serviceProvider', $user->username);
+            });
+        }
 
-		$fileName = null;
-		$name = Auth()->user()->name;
-		$email = Auth()->user()->email;
-
-		if ($serviceStatus == "completed") {
-			if ($serviceRequest) { // ถ้าเพิ่มคำขอใช้บริการสำเร็จ
-				$details = [
-					'message' => 'ระบบขอใช้บริการ',
-					'to' => $name,
-					'serviceRequestNumber' => $serviceRequest->serviceRequestNumber,
-					'serviceDescription' => $serviceRequest->serviceDescription,
-					'serviceName' => $serviceName->serviceName,
-					'serviceDepartment' => $departmentName->departmentName,
-					'serviceDepartmentType' => $departmentName->departmentType,
-					'serviceFileUpload' => $fileName,
-					'serviceStatus' => "ดำเนินการเสร็จสิ้น",
-					'serviceDateTime' => Carbon::now(),
-					'servicePriority' => null,
-					'serviceRecipient' => $serviceRecipient->name,
-					'serviceProvider' => $serviceProvider->name,
-					'messageContact' => 'หากมีข้อสงสัยเพิ่มเติม กรุณาติดต่อที่อีเมล',
-					'mail' => 'wittaya.kh@psu.ac.th',
-					'regard' => 'ขอแสดงความนับถือ',
-					'itsupport' => 'วิทยา ควรวิไลย',
-					'position' => 'นักวิชาการคอมพิวเตอร์',
-					'workgroup' => 'สาขาวิทยาศาสตร์การคำนวณ',
-					'faucultySci' => 'คณะวิทยาศาสตร์ มหาวิทยาลัยสงขลานครินทร์',
-					'more' => 'ดูรายละเอียดเพิ่มเติม',
-					'tel' => '093-639-8064',
-					'cookie_policy' => 'ข้อกำหนดการใช้งาน',
-					'privacy_policy' => 'นโยบายความเป็นส่วนตัว',
-				];
-
-				// ส่งอีเมลแจ้งเตือน
-				// Mail::send(new SendEmail($details, $email, $fileName));
-
-				return response()->json(['status' => true, 'message' => 'บันทึกสำเร็จ!']);
-			}
-		} else {
-			return response()->json(['status' => true, 'message' => 'บันทึกสำเร็จ!']);
-		}
+        // User และ Executive เห็นเฉพาะคำขอของตัวเอง
+        return ServiceRequest::where('serviceRecipient', $user->username);
     }
 
+    // ----------------------------------------------------------------
+    // index — หน้าแรก (แสดง form สร้างคำขอ)
+    // ----------------------------------------------------------------
+    public function index()
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_access'), 403);
+
+        $departments     = Department::orderBy('id')->get();
+        $service_assigns = ServiceAssign::orderBy('id')->get();
+        $prioritys       = Priority::orderBy('id')->get();
+        $users           = DB::table('users')->whereNotNull('username')->get();
+        $servicesStatus  = ServiceStatus::orderBy('id')->get();
+
+        // สร้าง requestId สำหรับ form (ไม่ใช้ record จริงใน DB เพื่อหลีกเลี่ยง race condition)
+        $today     = date('dmY');
+        $requestId = $today . '0001';
+
+        return view('admin.service_requests.index', compact(
+            'departments', 'service_assigns', 'requestId', 'prioritys', 'users', 'servicesStatus'
+        ));
+    }
+
+    // ----------------------------------------------------------------
+    // create — หน้าสร้างคำขอใหม่
+    // ----------------------------------------------------------------
+    public function create()
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_create'), 403);
+
+        $departments     = Department::orderBy('id')->get();
+        $service_assigns = ServiceAssign::orderBy('id')->get();
+        $prioritys       = Priority::orderBy('id')->get();
+        $users           = DB::table('users')->whereNotNull('username')->get();
+        $staffUsers      = DB::table('users')
+            ->join('role_user', 'users.id', '=', 'role_user.user_id')
+            ->join('roles', 'role_user.role_id', '=', 'roles.id')
+            ->where(function ($q) {
+                $q->where('roles.title', 'Staff')->orWhere('roles.title', 'Admin');
+            })
+            ->whereNotNull('users.username')
+            ->select('users.*')
+            ->get();
+        $servicesStatus  = ServiceStatus::orderBy('id')->get();
+
+        $lastRequest = ServiceRequest::orderByDesc('id')->first();
+        $nextNum     = $lastRequest ? $lastRequest->id + 1 : 1;
+        $requestId   = date('dmY') . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+
+        return view('admin.service_requests.create', compact(
+            'departments', 'service_assigns', 'requestId', 'prioritys', 'users', 'servicesStatus', 'staffUsers'
+        ));
+    }
+
+    // ----------------------------------------------------------------
+    // edit — หน้าแก้ไขคำขอ
+    // LAYER 3: scopedQuery() — ป้องกัน user เข้า record คนอื่น
+    // ----------------------------------------------------------------
+    public function edit($id)
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_edit'), 403);
+
+        // LAYER 3 — Ownership: ดึงเฉพาะ record ที่มีสิทธิ์
+        $serviceRequests = $this->scopedQuery()->findOrFail($id);
+
+        $fullName        = DB::table('users')->where('username', $serviceRequests->serviceRecipient)->first();
+        $departments     = Department::orderBy('id')->get();
+        $service_assigns = ServiceAssign::orderBy('id')->get();
+        $prioritys       = Priority::orderBy('id')->get();
+        $users           = DB::table('users')->whereNotNull('username')->get();
+        $staffUsers      = DB::table('users')
+            ->join('role_user', 'users.id', '=', 'role_user.user_id')
+            ->join('roles', 'role_user.role_id', '=', 'roles.id')
+            ->where(function ($q) {
+                $q->where('roles.title', 'Staff')->orWhere('roles.title', 'Admin');
+            })
+            ->whereNotNull('users.username')
+            ->select('users.*')
+            ->get();
+        $servicesStatus          = ServiceStatus::orderBy('id')->get();
+        $serviceRequestHistory   = ServiceRequestHistory::where('reqid', $id)->get();
+        $ServiceRequestMessages  = ServiceRequestMessage::where('reqid', $id)->get();
+        $serviceRequestHistorys  = ServiceRequestHistory::where('reqid', $id)->first();
+
+        $serviceRequestHistoryServiceName        = '';
+        $serviceRequestHistoryDateTime           = '';
+        $serviceRequestHistoryDateTimeUpdate     = '';
+        $serviceRequestHistoryDayAmounts         = 0;
+        $chatTitle                               = '';
+
+        foreach ($service_assigns as $service_assign) {
+            if ($serviceRequests->serviceName == $service_assign->id) {
+                $chatTitle = $service_assign->serviceName;
+            }
+        }
+
+        if ($serviceRequestHistorys != null) {
+            foreach ($service_assigns as $service_assign) {
+                if ($serviceRequestHistorys->serviceHistoryName == $service_assign->id) {
+                    $serviceRequestHistoryServiceName = $service_assign->serviceName;
+                }
+            }
+            $serviceRequestHistoryDateTime       = Carbon::parse($serviceRequestHistorys->serviceHistoryDateTime);
+            $serviceRequestHistoryDateTimeUpdate = Carbon::parse($serviceRequestHistorys->updated_at);
+            $serviceRequestHistoryDayAmounts     = $serviceRequestHistoryDateTime->diffInDays($serviceRequestHistoryDateTimeUpdate);
+        }
+
+        $serviceDateTime = Carbon::parse($serviceRequests->serviceDateTime);
+        $updated_at      = Carbon::parse($serviceRequests->updated_at);
+        $dayAmounts      = $serviceDateTime->diffInDays($updated_at);
+        $serviceDueDate  = $serviceRequests->serviceDateTime;
+
+        $priorityName = $this->resolvePriorityName($dayAmounts);
+        $serviceRequestHistoryDayAmountsPriorityName = $this->resolvePriorityName($serviceRequestHistoryDayAmounts);
+
+        $serviceRequest     = ServiceRequest::where('id', $id)->orderByDesc('id')->first();
+        $requestId          = $serviceRequest->serviceRequestNumber;
+        $serviceRequestName = ServiceRequest::select('serviceRequestName')
+            ->where('serviceRequestNumber', $serviceRequest->serviceRequestNumber)
+            ->first();
+        $requestName = $serviceRequestName->serviceRequestName ?? '';
+
+        return view('admin.service_requests.edit', compact(
+            'departments', 'service_assigns', 'requestId', 'prioritys', 'users', 'servicesStatus',
+            'serviceRequests', 'chatTitle', 'serviceRequestHistory', 'ServiceRequestMessages',
+            'serviceRequestHistoryServiceName', 'priorityName', 'serviceRequestHistoryDayAmountsPriorityName',
+            'fullName', 'serviceDueDate', 'staffUsers', 'requestName'
+        ));
+    }
+
+    // ----------------------------------------------------------------
+    // view — หน้าดูรายละเอียดคำขอ
+    // LAYER 3: scopedQuery() — ป้องกัน user เข้า record คนอื่น
+    // ----------------------------------------------------------------
+    public function view($id)
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_show'), 403);
+
+        // LAYER 3 — Ownership
+        $serviceRequests = $this->scopedQuery()->findOrFail($id);
+
+        $fullName                = DB::table('users')->where('username', $serviceRequests->serviceRecipient)->first();
+        $departments             = Department::orderBy('id')->get();
+        $service_assigns         = ServiceAssign::orderBy('id')->get();
+        $prioritys               = Priority::orderBy('id')->get();
+        $users                   = DB::table('users')->whereNotNull('username')->get();
+        $servicesStatus          = ServiceStatus::orderBy('id')->get();
+        $serviceRequest          = ServiceRequest::where('id', $id)->orderByDesc('id')->first();
+        $serviceRequestHistory   = ServiceRequestHistory::where('reqid', $id)->get();
+        $ServiceRequestMessages  = ServiceRequestMessage::where('reqid', $id)->get();
+        $serviceRequestHistorys  = ServiceRequestHistory::where('reqid', $id)->first();
+        $serviceProviders        = ServiceProvider::orderBy('id')->get();
+
+        $serviceRequestHistoryServiceName    = '';
+        $serviceRequestHistoryDateTime       = '';
+        $serviceRequestHistoryDateTimeUpdate = '';
+        $serviceRequestHistoryDayAmounts     = 0;
+        $chatTitle                           = '';
+
+        foreach ($service_assigns as $service_assign) {
+            if ($serviceRequests->serviceName == $service_assign->id) {
+                $chatTitle = $service_assign->serviceName;
+            }
+        }
+
+        if ($serviceRequestHistorys != null) {
+            foreach ($service_assigns as $service_assign) {
+                if ($serviceRequestHistorys->serviceHistoryName == $service_assign->id) {
+                    $serviceRequestHistoryServiceName = $service_assign->serviceName;
+                }
+            }
+            $serviceRequestHistoryDateTime       = Carbon::parse($serviceRequestHistorys->serviceHistoryDateTime);
+            $serviceRequestHistoryDateTimeUpdate = Carbon::parse($serviceRequestHistorys->updated_at);
+            $serviceRequestHistoryDayAmounts     = $serviceRequestHistoryDateTime->diffInDays($serviceRequestHistoryDateTimeUpdate);
+        }
+
+        $serviceDateTime = Carbon::parse($serviceRequests->serviceDateTime);
+        $updated_at      = Carbon::parse($serviceRequests->updated_at);
+        $dayAmounts      = $serviceDateTime->diffInDays($updated_at);
+
+        $priorityName = $this->resolvePriorityName($dayAmounts);
+        $serviceRequestHistoryDayAmountsPriorityName = $this->resolvePriorityName($serviceRequestHistoryDayAmounts);
+
+        $requestId = $serviceRequest->serviceRequestNumber ?? '';
+
+        return view('admin.service_requests.view', compact(
+            'departments', 'service_assigns', 'requestId', 'prioritys', 'users', 'servicesStatus',
+            'serviceRequests', 'chatTitle', 'serviceRequestHistory', 'ServiceRequestMessages',
+            'serviceRequestHistoryServiceName', 'priorityName', 'serviceRequestHistoryDayAmountsPriorityName',
+            'fullName', 'serviceProviders'
+        ));
+    }
+
+    // ----------------------------------------------------------------
+    // list — ดึงรายการคำขอ (JSON สำหรับ DataTable)
+    // LAYER 3: scopedQuery() — แต่ละ role เห็นเฉพาะ record ของตัวเอง
+    // LAYER 4: only() — ส่งเฉพาะ field ที่จำเป็น
+    // ----------------------------------------------------------------
+    public function list()
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_access'), 403);
+
+        // LAYER 3 — Ownership: scopedQuery กรองตาม role อัตโนมัติ
+        $serviceRequests = $this->scopedQuery()->orderByDesc('id')->get();
+
+        // LAYER 4 — Output filter: ส่งเฉพาะ field ที่จำเป็น
+        $data = $serviceRequests->map(fn($r) => $r->only([
+            'id',
+            'serviceRequestNumber',
+            'serviceRequestName',
+            'serviceName',
+            'serviceDepartment',
+			'serviceDescription',
+            'serviceStatus',
+            'serviceDateTime',
+            'serviceRecipient',
+            'serviceFlag',
+        ]));
+
+        return response()->json(['status' => true, 'data' => $data]);
+    }
+
+    // ----------------------------------------------------------------
+    // save — บันทึกคำขอใหม่
+    // LAYER 2: service_request_create
+    // LAYER 4: validate + only() + serviceRecipient บังคับจาก Auth
+    // ----------------------------------------------------------------
+    public function save(Request $request, $id = '')
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_create'), 403);
+
+        // LAYER 4 — Validate
+        $validator = Validator::make($request->all(), [
+            'serviceRequestNumber' => 'required|string|max:50',
+            'serviceName'          => 'required|integer|exists:service_assign,id',
+            'serviceDepartment'    => 'required',
+            'serviceRecipient'     => 'required|string',
+            'serviceDescription'   => 'nullable|string|max:2000',
+            'serviceStatusName'    => 'nullable|string|max:100',
+            'serviceFileUpload'    => 'nullable|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,png,jpg,jpeg',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'error' => $validator->errors()]);
+        }
+
+        // LAYER 4 — File upload: ใช้ hashName() ป้องกัน path traversal
+        $fileName = '-';
+        if ($request->hasFile('serviceFileUpload')) {
+            $file     = $request->file('serviceFileUpload');
+            $fileName = $file->hashName(); // สุ่มชื่อไฟล์ ป้องกัน path traversal
+            $file->move(public_path('uploads'), $fileName);
+        }
+
+        $serviceDepartment = $request->input('serviceDepartment');
+        $departmentType    = $request->input('departmentType');
+        $requestName       = $request->input('request_name');
+        $serviceStatusName = $request->input('serviceStatusName');
+
+        // สร้างหน่วยงานใหม่ถ้าเลือก 'etc'
+        if ($serviceDepartment === 'etc') {
+            $validator2 = Validator::make($request->all(), [
+                'departmentName' => 'required|string|max:255',
+                'departmentType' => 'required|string|max:100',
+            ]);
+            if ($validator2->fails()) {
+                return response()->json(['status' => false, 'error' => $validator2->errors()]);
+            }
+
+            $department     = Department::create($request->only(['departmentName', 'departmentType']));
+            $departmentId   = $department->id;
+            $departmentType = $department->departmentType;
+        } else {
+            $departmentId   = $serviceDepartment;
+        }
+
+        // LAYER 4 — serviceRecipient บังคับจาก Auth ถ้าเป็น User
+        //           Admin/Staff สามารถระบุ serviceRecipient ให้คนอื่นได้
+        $user  = Auth::user();
+        $roles = $user->roles->pluck('title');
+
+        $serviceRecipient = $roles->intersect(['Admin', 'Staff'])->isNotEmpty()
+            ? $request->input('serviceRecipient')
+            : $user->username; // User/Executive บังคับเป็นของตัวเองเสมอ
+
+        $serviceRequest = ServiceRequest::create([
+            'serviceRequestNumber' => $request->input('serviceRequestNumber'),
+            'serviceDescription'   => $request->input('serviceDescription'),
+            'serviceName'          => $request->input('serviceName'),
+            'serviceDepartment'    => $departmentId,
+            'serviceDepartmentType'=> $departmentType ?? null,
+            'serviceRequestName'   => $requestName,
+            'serviceFileUpload'    => $fileName,
+            'serviceStatus'        => $serviceStatusName,
+            'serviceDateTime'      => Carbon::now(),
+            'servicePriority'      => null,
+            'serviceRecipient'     => $serviceRecipient,
+            'serviceProvider'      => null,
+        ]);
+
+        // บันทึก ServiceProvider ถ้ามี
+        if ($serviceRequest) {
+            $serviceProviderInput = $request->input('serviceProvider', []);
+            if (!is_array($serviceProviderInput)) {
+                $serviceProviderInput = [$serviceProviderInput];
+            }
+            foreach ($serviceProviderInput as $provider) {
+                ServiceProvider::create([
+                    'reqid'           => $serviceRequest->id,
+                    'serviceProvider' => $provider,
+                ]);
+            }
+
+            return response()->json(['status' => true, 'message' => 'บันทึกสำเร็จ!']);
+        }
+
+        return response()->json(['status' => false, 'message' => 'เกิดข้อผิดพลาด'], 500);
+    }
+
+    // ----------------------------------------------------------------
+    // update — แก้ไขคำขอ
+    // LAYER 2: service_request_edit
+    // LAYER 3: scopedQuery — ป้องกัน edit record คนอื่น
+    // LAYER 4: validate + only()
+    // ----------------------------------------------------------------
+    public function update(Request $request, $id = '')
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_edit'), 403);
+
+        // LAYER 4 — Validate
+        $validator = Validator::make($request->all(), [
+            'serviceRequestNumber' => 'required|string|max:50',
+            'serviceName'          => 'required|integer|exists:service_assign,id',
+            'serviceDepartment'    => 'required',
+            'serviceRecipient'     => 'required|string',
+            'serviceDescription'   => 'nullable|string|max:2000',
+            'serviceStatusName'    => 'nullable|string|max:100',
+            'serviceFileUpload'    => 'nullable|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,png,jpg,jpeg',
+            'id'                   => 'required|integer|exists:service_request,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'error' => $validator->errors()]);
+        }
+
+        // LAYER 3 — Ownership: ป้องกัน edit record คนอื่น
+        $existingRequest = $this->scopedQuery()->findOrFail($request->input('id'));
+
+        // LAYER 4 — File upload: ใช้ hashName() ป้องกัน path traversal
+        $fileName = $existingRequest->serviceFileUpload ?? '-';
+        if ($request->hasFile('serviceFileUpload')) {
+            $file     = $request->file('serviceFileUpload');
+            $fileName = $file->hashName();
+            $file->move(public_path('uploads'), $fileName);
+        }
+
+        $serviceDepartment = $request->input('serviceDepartment');
+        $requestName       = $request->input('request_name');
+        $serviceStatusName = $request->input('serviceStatusName');
+
+        // สร้างหน่วยงานใหม่ถ้าเลือก 'etc'
+        if ($serviceDepartment === 'etc') {
+            $validator2 = Validator::make($request->all(), [
+                'departmentName' => 'required|string|max:255',
+                'departmentType' => 'required|string|max:100',
+            ]);
+            if ($validator2->fails()) {
+                return response()->json(['status' => false, 'error' => $validator2->errors()]);
+            }
+            $department    = Department::create($request->only(['departmentName', 'departmentType']));
+            $departmentId  = $department->id;
+            $departmentType = $department->departmentType;
+        } else {
+            $dept          = Department::findOrFail($serviceDepartment);
+            $departmentId  = $dept->id;
+            $departmentType = $dept->departmentType;
+        }
+
+        // บันทึก History ก่อน update
+        ServiceRequestHistory::create([
+            'reqid'                        => $existingRequest->id,
+            'serviceRequestHistoryNumber'  => $existingRequest->serviceRequestNumber,
+            'serviceHistoryDescription'    => $existingRequest->serviceDescription,
+            'serviceHistoryName'           => $existingRequest->serviceName,
+            'serviceHistoryDepartment'     => $existingRequest->serviceDepartment,
+            'serviceHistoryDepartmentType' => $existingRequest->serviceDepartmentType,
+            'serviceRequestName'           => $requestName,
+            'serviceHistoryFileUpload'     => $existingRequest->serviceFileUpload,
+            'serviceHistoryStatus'         => $existingRequest->serviceStatus,
+            'serviceHistoryDateTime'       => $existingRequest->serviceDateTime,
+            'serviceHistoryPriority'       => null,
+            'serviceHistoryRecipient'      => $existingRequest->serviceRecipient,
+            'serviceHistoryProvider'       => $existingRequest->serviceProvider,
+        ]);
+
+        // LAYER 4 — only() field ที่อนุญาต
+        $existingRequest->update([
+            'serviceRequestNumber'  => $request->input('serviceRequestNumber'),
+            'serviceDescription'    => $request->input('serviceDescription'),
+            'serviceName'           => $request->input('serviceName'),
+            'serviceDepartment'     => $departmentId,
+            'serviceDepartmentType' => $departmentType,
+            'serviceRequestName'    => $requestName,
+            'serviceFileUpload'     => $fileName,
+            'serviceStatus'         => $serviceStatusName,
+            'serviceDateTime'       => Carbon::now(),
+            'servicePriority'       => null,
+            'serviceRecipient'      => $request->input('serviceRecipient'),
+            'serviceProvider'       => $request->input('serviceProvider'),
+        ]);
+
+        return response()->json(['status' => true, 'message' => 'บันทึกสำเร็จ!']);
+    }
+
+    // ----------------------------------------------------------------
+    // find — ดึงข้อมูล record เดี่ยว (JSON)
+    // LAYER 3: scopedQuery — ป้องกัน access record คนอื่น
+    // LAYER 4: only() — ส่งเฉพาะ field ที่จำเป็น
+    // ----------------------------------------------------------------
+    public function find($id)
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_access'), 403);
+
+        // LAYER 3 — Ownership
+        $serviceRequest = $this->scopedQuery()->findOrFail($id);
+
+        // LAYER 4 — Output filter
+        return response()->json([
+            'status' => true,
+            'data'   => $serviceRequest->only([
+                'id', 'serviceRequestNumber', 'serviceRequestName',
+                'serviceName', 'serviceDepartment', 'serviceDepartmentType',
+                'serviceDescription', 'serviceStatus', 'serviceDateTime',
+                'serviceRecipient', 'serviceProvider', 'serviceFileUpload',
+                'serviceFlag',
+            ]),
+        ]);
+    }
+
+    // ----------------------------------------------------------------
+    // delete — ลบคำขอ
+    // LAYER 3: scopedQuery — ป้องกัน delete record คนอื่น
+    // ----------------------------------------------------------------
+    public function delete($id)
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_delete'), 403);
+
+        // LAYER 3 — Ownership
+        $serviceRequest = $this->scopedQuery()->findOrFail($id);
+        $serviceRequest->delete();
+
+        return response()->json(['status' => true, 'message' => 'ลบสำเร็จ!']);
+    }
+
+    // ----------------------------------------------------------------
+    // download — ดาวน์โหลดไฟล์แนบ
+    // LAYER 3: scopedQuery — ตรวจว่า record นั้นเป็นของตัวเองก่อน
+    // LAYER 4: Path traversal protection — ใช้ basename() + whitelist ext
+    // ----------------------------------------------------------------
+    public function download($id)
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_access'), 403);
+
+        // LAYER 3 — Ownership: ดึง record เพื่อหา filename จริง
+        //           ไม่รับ filename ตรงจาก URL parameter
+        $serviceRequest = $this->scopedQuery()->findOrFail($id);
+
+        $storedFileName = $serviceRequest->serviceFileUpload;
+
+        // LAYER 4 — Path traversal: ป้องกัน ../../../etc/passwd
+        if (!$storedFileName || $storedFileName === '-') {
+            abort(404, 'ไม่มีไฟล์แนบ');
+        }
+
+        // basename() ตัด path traversal ออก
+        $safeFileName = basename($storedFileName);
+        $filePath     = public_path('uploads/' . $safeFileName);
+
+        if (!file_exists($filePath)) {
+            abort(404, 'File not found');
+        }
+
+        // LAYER 4 — Whitelist MIME type ที่อนุญาต
+        $allowedMimes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'image/png',
+            'image/jpeg',
+        ];
+
+        $mimeType = mime_content_type($filePath);
+
+        if (!in_array($mimeType, $allowedMimes)) {
+            abort(403, 'ประเภทไฟล์ไม่ได้รับอนุญาต');
+        }
+
+        return Response::download($filePath, $safeFileName, ['Content-Type' => $mimeType]);
+    }
+
+    // ----------------------------------------------------------------
+    // service_status_change — เปลี่ยนสถานะคำขอ
+    // LAYER 3: scopedQuery — ป้องกัน update record คนอื่น
+    // LAYER 4: validate input
+    // ----------------------------------------------------------------
+    public function service_status_change(Request $request)
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_edit'), 403);
+
+        // LAYER 4 — Validate
+        $validator = Validator::make($request->all(), [
+            'dataId'          => 'required|integer|exists:service_request,id',
+            'serviceStatusName' => 'required|string|max:100',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'error' => $validator->errors()], 422);
+        }
+
+        $id = $request->input('dataId');
+
+        // LAYER 3 — Ownership
+        $serviceRequest = $this->scopedQuery()->findOrFail($id);
+
+        $serviceName    = ServiceAssign::where('id', $serviceRequest->serviceName)->first();
+        $departmentName = Department::where('id', $serviceRequest->serviceDepartment)->first();
+        $serviceStatusName = $request->input('serviceStatusName');
+
+        // บันทึก History
+        ServiceRequestHistory::create([
+            'serviceRequestHistoryNumber' => $serviceRequest->serviceRequestNumber,
+            'serviceHistoryDescription'   => $serviceRequest->serviceDescription,
+            'serviceHistoryName'          => $serviceRequest->serviceName,
+            'serviceHistoryDepartment'    => $serviceRequest->serviceDepartment,
+            'serviceHistoryDepartmentType'=> $serviceRequest->serviceDepartmentType,
+            'serviceHistoryFileUpload'    => $serviceRequest->serviceFileUpload,
+            'serviceHistoryStatus'        => $serviceStatusName,
+            'serviceHistoryDateTime'      => $serviceRequest->serviceDateTime,
+            'serviceHistoryPriority'      => null,
+            'serviceHistoryRecipient'     => $serviceRequest->serviceRecipient,
+            'serviceHistoryProvider'      => $serviceRequest->serviceProvider,
+        ]);
+
+        // LAYER 4 — only field ที่ต้องการ update
+        $serviceRequest->update(['serviceStatus' => $serviceStatusName]);
+
+        return response()->json(['status' => true, 'message' => 'บันทึกสำเร็จ!']);
+    }
+
+    // ----------------------------------------------------------------
+    // serviceFlag — ติดดาว / เอาดาวออก
+    // LAYER 3: scopedQuery — ป้องกัน flag record คนอื่น
+    // LAYER 4: validate input
+    // ----------------------------------------------------------------
     public function serviceFlag(Request $request)
     {
-		abort_unless(Gate::allows('service_request_edit'), 403);
-		$id = $request->input('dataId');
-        $flagValue = $request->input('flagValue');
-        $serviceRequest = ServiceRequest::updateOrCreate(
-            [
-                'id' => $id,
-            ],
-            [
-                'serviceFlag' => $flagValue,
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_edit'), 403);
+
+        // LAYER 4 — Validate
+        $validator = Validator::make($request->all(), [
+            'dataId'    => 'required|integer|exists:service_request,id',
+            'flagValue' => 'required|boolean',
         ]);
-        if($serviceRequest){
-            return response()->json(['status' => true, 'message' => 'ติดดาวสำเร็จ']);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'error' => $validator->errors()], 422);
         }
+
+        $id = $request->input('dataId');
+
+        // LAYER 3 — Ownership: ดึง record ก่อน แล้วค่อย update
+        $serviceRequest = $this->scopedQuery()->findOrFail($id);
+        $serviceRequest->update(['serviceFlag' => $request->input('flagValue')]);
+
+        return response()->json(['status' => true, 'message' => 'ติดดาวสำเร็จ']);
     }
 
-	public function updateServiceRequestNote(Request $request)
-	{
-		abort_unless(Gate::allows('service_request_edit'), 403);
-		$serviceRequestId = $request->input('serviceRequestId');
-		$serviceRequestNumber = $request->input('serviceRequestNumber');
-		$serviceRequestNote = $request->input('serviceRequestNote');
-		$serviceRequest = ServiceRequest::where('serviceRequestNumber','=',$serviceRequestNumber)->first();
-		$serviceRequestProvider = $serviceRequest->serviceProvider;
+    // ----------------------------------------------------------------
+    // updateServiceRequestNote — บันทึก note
+    // LAYER 3: ตรวจว่า serviceRequest นั้นเป็นของตัวเองก่อน
+    // LAYER 4: validate input
+    // ----------------------------------------------------------------
+    public function updateServiceRequestNote(Request $request)
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_edit'), 403);
 
-		$ServiceRequestNote = ServiceRequestNote::create(
-			[
-				'serviceRequestId' => $serviceRequestId,
-				'serviceRequestNumber' => $serviceRequestNumber,
-				'serviceRequestNote' => $serviceRequestNote,
-				'serviceRequestProvider' => $serviceRequestProvider,
-		]);
+        // LAYER 4 — Validate
+        $validator = Validator::make($request->all(), [
+            'serviceRequestId'     => 'required|integer|exists:service_request,id',
+            'serviceRequestNumber' => 'required|string|max:50',
+            'serviceRequestNote'   => 'required|string|max:2000',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'error' => $validator->errors()], 422);
+        }
 
-		if($ServiceRequestNote){
-			return response()->json(['status' => true, 'message' => 'บันทึกสำเร็จ']);
-		}
-	}
+        $id = $request->input('serviceRequestId');
 
+        // LAYER 3 — Ownership: ตรวจว่า record นั้นเป็นของตัวเองก่อน
+        $serviceRequest = $this->scopedQuery()->findOrFail($id);
+
+        $ServiceRequestNote = ServiceRequestNote::create([
+            'serviceRequestId'       => $id,
+            'serviceRequestNumber'   => $request->input('serviceRequestNumber'),
+            'serviceRequestNote'     => $request->input('serviceRequestNote'),
+            'serviceRequestProvider' => $serviceRequest->serviceProvider, // ดึงจาก record จริง ไม่รับจาก request
+        ]);
+
+        return response()->json(['status' => true, 'message' => 'บันทึกสำเร็จ']);
+    }
+
+    // ----------------------------------------------------------------
+    // serviceRequestMessage — ส่งข้อความในคำขอ
+    // LAYER 3: ตรวจ ownership ก่อนบันทึก message
+    // LAYER 4: validate input
+    // ----------------------------------------------------------------
     public function serviceRequestMessage(Request $request)
-	{
-		abort_unless(Gate::allows('service_request_edit'), 403);
-        $id = $request->input('dataId');
-		$serviceRequestMessage = $request->input('serviceRequestMessage');
-        $serviceRequest = ServiceRequest::where('id','=',$id)->first();
-        $serviceProviders = ServiceProvider::where('reqid','=',$id,'and')->where('serviceProvider','=',Auth::user()->username)->first();
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_edit'), 403);
 
-        // ตรวจสอบสิทธิ์การเข้าถึง
-		$roles = Auth::user()->roles;
-		foreach ($roles as $role) {
-			if($role->title == 'Admin'){
-			}
-			if($role->title == 'Staff'){
-                // dd($serviceRequest->serviceProvider);
-                $ServiceRequestNote = ServiceRequestMessage::create(
-                    [
-                        'reqid' => "$id",
-                        'requestMessageServiceName'=> "$serviceRequest->serviceName",
-                        'requestMessageSender'=> "$serviceProviders->serviceProvider",
-                        'requestMessage'=> "$serviceRequestMessage",
-                        'requestMessageDateTime'=> Carbon::now(),
-                ]);
-			}
-			if($role->title == 'User'){
-                // dd($serviceRequest->serviceRecipient);
-                $ServiceRequestNote = ServiceRequestMessage::create(
-                    [
-                        'reqid' => "$id",
-                        'requestMessageServiceName'=> "$serviceRequest->serviceName",
-                        'requestMessageSender'=> "$serviceRequest->serviceRecipient",
-                        'requestMessage'=> "$serviceRequestMessage",
-                        'requestMessageDateTime'=> Carbon::now(),
-                ]);
-			}
-			if($role->title == 'Executive'){
+        // LAYER 4 — Validate
+        $validator = Validator::make($request->all(), [
+            'dataId'                => 'required|integer|exists:service_request,id',
+            'serviceRequestMessage' => 'required|string|max:2000',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'error' => $validator->errors()], 422);
+        }
 
-			}
-		}
+        $id   = $request->input('dataId');
+        $user = Auth::user();
 
-		return response()->json(['status' => true, 'message' => 'success']);
-	}
+        // LAYER 3 — Ownership
+        $serviceRequest = $this->scopedQuery()->findOrFail($id);
 
-	public function getTimeLine($id)
-	{	
-		abort_unless(Gate::allows('service_request_access'), 403);
-		$serviceRequestNotes = ServiceRequestNote::join('service_request','service_request.id','=','service_request_note.serviceRequestId')
-		->join('service_assign','service_assign.id','=','service_request.serviceName')
-		->join('users','users.username','=','service_request.serviceProvider')
-		->where('serviceRequestId','=',$id)->get();
-		// dd($serviceRequestNotes);
-		if($serviceRequestNotes){
-			return response()->json(['status' => true, 'data' => $serviceRequestNotes ]);
-		}else{
-			return response()->json(['status' => false, 'message' => 'ไม่พบข้อมูล']);
-		}
-	}
+        $roles  = $user->roles->pluck('title');
+        $sender = $user->username; // บังคับ sender จาก Auth เสมอ
 
-	public function departmentType(Request $request)
-	{
-		abort_unless(Gate::allows('service_request_access'), 403);
-		$departmentType = $request->input('departmentType');
-		$data = Department::where('departmentType','=',$departmentType)->get();
-		// dd($data);
-		if($data){
-			return response()->json(['status' => true, 'data' => $data ]);
-		}else{
-			return response()->json(['status' => false, 'message' => 'ไม่พบข้อมูล']);
-		}
-	}
+        if ($roles->contains('Staff') || $roles->contains('Admin')) {
+            $serviceProvider = ServiceProvider::where('reqid', $id)
+                ->where('serviceProvider', $user->username)
+                ->first();
+            $sender = $serviceProvider->serviceProvider ?? $user->username;
+        }
 
-	public	function servicename(Request $request)
-	{
-		abort_unless(Gate::allows('service_request_access'), 403);
-		$serviceProvider = $request->input('serviceProvider');
-		$data = ServiceAssign::where('serviceProvider','=',$serviceProvider)->get();
-		// dd($data);
-		if($data){
-			return response()->json(['status' => true, 'data' => $data ]);
-		}else{
-			return response()->json(['status' => false, 'message' => 'ไม่พบข้อมูล']);
-		}
-	}
+        ServiceRequestMessage::create([
+            'reqid'                     => $id,
+            'requestMessageServiceName' => $serviceRequest->serviceName,
+            'requestMessageSender'      => $sender, // บังคับจาก Auth ไม่รับจาก request
+            'requestMessage'            => $request->input('serviceRequestMessage'),
+            'requestMessageDateTime'    => Carbon::now(),
+        ]);
 
-	public function getNextOrderNumber()
-	{
-		abort_unless(Gate::allows('service_request_access'), 403);
-		// Get the last created order
-		// $lastOrder = Order::orderBy('created_at', 'desc')->first();
-		$lastOrder = ServiceAssign::orderBy('id')->first();
+        return response()->json(['status' => true, 'message' => 'success']);
+    }
 
-		// Set Prefix
-		// $prefix = date('Y');
-		$prefix = 'REQ' . date('dmY');
+    // ----------------------------------------------------------------
+    // getTimeLine — ดู timeline ของคำขอ
+    // LAYER 3: ตรวจ ownership ก่อน
+    // LAYER 4: only() field ที่จำเป็น
+    // ----------------------------------------------------------------
+    public function getTimeLine($id)
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_access'), 403);
 
-		// Set db-field
-		$field = 'order_id';
+        // LAYER 3 — Ownership: ตรวจว่ามีสิทธิ์เข้า record นี้ไหม
+        $this->scopedQuery()->findOrFail($id);
 
-		// Set length of incrementing number
-		$length = 6;
+        $serviceRequestNotes = ServiceRequestNote::join('service_request', 'service_request.id', '=', 'service_request_note.serviceRequestId')
+            ->join('service_assign', 'service_assign.id', '=', 'service_request.serviceName')
+            ->join('users', 'users.username', '=', 'service_request.serviceProvider')
+            ->where('serviceRequestId', $id)
+            ->get();
 
-		if (!$lastOrder) {
-			// We get here if there is no order at all
-			// If there is no number set it to 0, which will be 1 at the end.
+        if ($serviceRequestNotes->isNotEmpty()) {
+            return response()->json(['status' => true, 'data' => $serviceRequestNotes]);
+        }
 
-			$number = 0;
-		} else {
-			// If we have ORD2023000001 in the database then we only want the number
-			// So the substr returns this 000001
-			$number = substr($lastOrder->{$field}, strlen($prefix));
-		}
+        return response()->json(['status' => false, 'message' => 'ไม่พบข้อมูล']);
+    }
 
-		// Reset incrementing no if prefix has changed (e.g. in new year)
-		if (substr($lastOrder->order_no, 0, strlen($prefix)) !== $prefix) {
-			$number = 0;
-		}
+    // ----------------------------------------------------------------
+    // departmentType — ดึง department ตาม type
+    // LAYER 4: validate input
+    // ----------------------------------------------------------------
+    public function departmentType(Request $request)
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_access'), 403);
 
-		// Add the string in front and higher up the number.
-		// the %05d part makes sure that there are always 6 numbers in the string.
-		// so it adds the missing zero's when needed.
+        // LAYER 4 — Validate
+        $validator = Validator::make($request->all(), [
+            'departmentType' => 'required|string|max:100',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'error' => $validator->errors()], 422);
+        }
 
-		return sprintf('%s%0' . $length . 'd', $prefix, intval($number) + 1);
-	}
+        $data = Department::where('departmentType', $request->input('departmentType'))
+            ->get(['id', 'departmentName', 'departmentType']); // LAYER 4 — only field ที่จำเป็น
 
+        return response()->json(['status' => true, 'data' => $data]);
+    }
 
+    // ----------------------------------------------------------------
+    // servicename — ดึง service ตาม serviceProvider
+    // LAYER 4: validate input
+    // ----------------------------------------------------------------
+    public function servicename(Request $request)
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_access'), 403);
+
+        // LAYER 4 — Validate
+        $validator = Validator::make($request->all(), [
+            'serviceProvider' => 'required|string|max:100',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'error' => $validator->errors()], 422);
+        }
+
+        $data = ServiceAssign::where('serviceProvider', $request->input('serviceProvider'))
+            ->get(['id', 'serviceName', 'serviceProvider']); // LAYER 4 — only field ที่จำเป็น
+
+        return response()->json(['status' => true, 'data' => $data]);
+    }
+
+    // ----------------------------------------------------------------
+    // selectdepartments — ค้นหา staff ที่รับผิดชอบ department/service
+    // ----------------------------------------------------------------
+    public function selectdepartments(Request $request)
+    {
+        // LAYER 2
+        abort_unless(Gate::allows('service_request_access'), 403);
+
+        // LAYER 4 — Validate
+        $validator = Validator::make($request->all(), [
+            'department' => 'required|string|max:255',
+            'service'    => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'error' => $validator->errors()]);
+        }
+
+        $service_id   = $request->input('service');
+        $assign_tasks = DB::table('assign_tasks')->get();
+
+        $usernames = $assign_tasks->filter(function ($item) use ($service_id) {
+            return in_array($service_id, explode(',', $item->service_id));
+        })->pluck('username')->all();
+
+        $department    = $request->input('department');
+        $department_id = DB::table('department')->where('department_name', $department)->value('id');
+
+        if (!$department_id) {
+            return response()->json(['status' => false, 'message' => 'ไม่พบหน่วยงาน']);
+        }
+
+        if (empty($usernames)) {
+            return response()->json(['status' => false, 'message' => 'ไม่พบข้อมูล']);
+        }
+
+        // LAYER 4 — ส่งเฉพาะ field ที่จำเป็น
+        $user = DB::table('users')->where('username', $usernames[0])->select('name', 'username')->first();
+
+        return response()->json([
+            'status' => true,
+            'data'   => ['services' => $user->name ?? ''],
+        ]);
+    }
+
+    // ----------------------------------------------------------------
+    // Helper: แปลงจำนวนวันเป็นชื่อความเร่งด่วน
+    // ----------------------------------------------------------------
+    private function resolvePriorityName(int $days): string
+    {
+        return match (true) {
+            $days <= 1  => 'ด่วนที่สุด',
+            $days <= 3  => 'ด่วนมาก',
+            $days <= 7  => 'ด่วน',
+            default     => 'ปกติ',
+        };
+    }
 }

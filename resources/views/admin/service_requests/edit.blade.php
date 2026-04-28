@@ -274,13 +274,13 @@
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
                                         </div>
-                                        <select name="serviceStatus" id="serviceStatus"
+                                        <select name="serviceStatusName" id="serviceStatusName"
                                             onchange="service_status_change(this.value, this)"
                                             class="form-control select2" required>
                                             <option value="">เลือก</option>
                                             @foreach ($servicesStatus as $servicesStatusItem)
-                                                <option value="{{ $servicesStatusItem->serviceStatus }}"
-                                                    {{ $servicesStatusItem->serviceStatus == $serviceRequests->serviceStatus ? 'selected' : '' }}>
+                                                <option value="{{ $servicesStatusItem->serviceStatusName }}"
+                                                    {{ $servicesStatusItem->serviceStatusName == $serviceRequests->serviceStatus ? 'selected' : '' }}>
                                                     {{ $servicesStatusItem->serviceStatusName }}</option>
                                             @endforeach
                                         </select>
@@ -452,7 +452,10 @@
             $("#serviceProvider").select2({
                 // width: '85%'
             });
-            $("#serviceStatus").select2({
+            // $("#serviceStatus").select2({
+            //     // width: '85%'
+            // });
+            $("#serviceStatusName").select2({
                 // width: '85%'
             });
 
@@ -912,7 +915,7 @@
             $('#modal_timeline_form').modal('show');
         }
 
-        function service_status_change(serviceStatus, element) {
+        function service_status_change(serviceStatusName, element) {
             // Find the nearest `span` element with `data-id` relative to `element`
             // var dataId = $(element).closest('tr').find('span').data('id');
             var dataId = $('#id').val();
@@ -920,7 +923,7 @@
                 type: "POST",
                 url: "{{ route('admin.service_requests.service_status_change') }}",
                 data: {
-                    serviceStatus: serviceStatus,
+                    serviceStatusName: serviceStatusName,
                     dataId: dataId
                 },
                 dataType: 'json',

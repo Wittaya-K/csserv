@@ -35,7 +35,7 @@
                         <tr width="10">
                             <th>#</th>
                             <th>สถานะ</th>
-                            <th>ค่าสถานะ</th>
+                            {{-- <th>ค่าสถานะ</th> --}}
                             <th></th>
                         </tr>
                     </thead>
@@ -75,7 +75,7 @@
                             </div>
                         </div>
 
-                        <div class="row">
+                        {{-- <div class="row">
                             <div class="col-lg-6 col-12">
                                 <div class="form-group">
                                     <label class="col-sm-12 control-label">ค่าสถานะ</label>
@@ -89,7 +89,7 @@
                                     <p class="help-block" style="color: red;"><span id=""></span></p>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
 
                         <div class="col-sm-offset-2 col-sm-10">
                             <button type="submit" class="btn btn-success" id="saveBtn" value="create"><i
@@ -136,10 +136,10 @@
                         data: 'serviceStatusName',
                         name: 'serviceStatusName',
                     },
-                    {
-                        data: 'serviceStatus',
-                        name: 'serviceStatus',
-                    },
+                    // {
+                    //     data: 'serviceStatus',
+                    //     name: 'serviceStatus',
+                    // },
                     // {
                     //     data: 'serviceStatus',
                     //     render: function (data, type, row, meta) {
@@ -194,7 +194,7 @@
                     $('#ajaxModel').modal('show');
                     $('#service_status_id').val(data.id);
                     $('#serviceStatusName').val(data.serviceStatusName);
-                    $('#serviceStatus').val(data.serviceStatus);
+                    // $('#serviceStatus').val(data.serviceStatus);
                 })
             });
 
@@ -213,13 +213,14 @@
                         text: "กรุณาระบุสถานะการใช้บริการ!",
                         icon: "warning"
                     });
-                } else if ($('#serviceStatus').val() == '') {
-                    Swal.fire({
-                        title: "แจ้งเตือน!",
-                        text: "กรุณาระบุค่าสถานะการใช้บริการ!",
-                        icon: "warning"
-                    });
-                }
+                } 
+                // else if ($('#serviceStatus').val() == '') {
+                //     Swal.fire({
+                //         title: "แจ้งเตือน!",
+                //         text: "กรุณาระบุค่าสถานะการใช้บริการ!",
+                //         icon: "warning"
+                //     });
+                // }
 
                 $.ajax({
                     data: $('#department_Form').serialize(),
@@ -230,7 +231,8 @@
 
                         $('#department_Form').trigger("reset");
                         $('#ajaxModel').modal('hide');
-                        table.draw();
+                        // table.draw();
+                        location.reload();
 
                     },
                     error: function(data) {

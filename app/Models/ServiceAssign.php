@@ -11,11 +11,18 @@ class ServiceAssign extends Model
 
     protected $table = "service_assign";
 
+    // LAYER 4 — Mass Assignment Protection:
+    // ลบ created_at, updated_at, deleted_at ออกจาก fillable
+    // เพราะ Laravel จัดการให้อัตโนมัติ และอนุญาตให้ user กำหนดค่าเองได้อันตราย
     protected $fillable = [
         'serviceName',
         'serviceProvider',
-        'created_at',
-        'updated_at',
+    ];
+
+    // LAYER 4 — Output filter:
+    // field ที่ไม่ควรส่งออก JSON response โดยตรง
+    // (ในกรณีนี้ยังไม่มี sensitive field แต่เพิ่ม deleted_at เพื่อความปลอดภัย)
+    protected $hidden = [
         'deleted_at',
     ];
 }
