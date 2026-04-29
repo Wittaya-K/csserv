@@ -363,16 +363,21 @@ class ServiceRequestController extends Controller
 
         // บันทึก ServiceProvider ถ้ามี
         if ($serviceRequest) {
-            $serviceProviderInput = $request->input('serviceProvider', []);
-            if (!is_array($serviceProviderInput)) {
-                $serviceProviderInput = [$serviceProviderInput];
-            }
-            foreach ($serviceProviderInput as $provider) {
-                ServiceProvider::create([
-                    'reqid'           => $serviceRequest->id,
-                    'serviceProvider' => $provider,
-                ]);
-            }
+            // $serviceProviderInput = $request->input('serviceProvider', []);
+            // if (!is_array($serviceProviderInput)) {
+            //     $serviceProviderInput = [$serviceProviderInput];
+            // }
+            // foreach ($serviceProviderInput as $provider) {
+            //     ServiceProvider::create([
+            //         'reqid'           => $serviceRequest->id,
+            //         'serviceProvider' => $provider,
+            //     ]);
+            // }
+
+            ServiceProvider::create([
+                'reqid'           => $serviceRequest->id,
+                'serviceProvider' => $request->input('serviceProvider'),
+            ]);
 
             return response()->json(['status' => true, 'message' => 'บันทึกสำเร็จ!']);
         }

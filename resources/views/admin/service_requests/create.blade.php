@@ -180,7 +180,7 @@
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
                                     </div>
-                                    <select name="serviceProvider[]" id="serviceProvider" class="form-control select2" required>
+                                    <select name="serviceProvider" id="serviceProvider" class="form-control select2" required>
                                         <option value="">เลือก</option>
                                         @foreach ($staffUsers as $staffUser)
                                         <option value="{{ $staffUser->username }}">{{ $staffUser->name }}</option>
@@ -398,7 +398,7 @@
         } else if ($('#departmentType').val() == '') {
             Swal.fire({
                 title: "แจ้งเตือน!"
-                , text: "กรุณาระบุรายละเอียดที่ต้องการ!"
+                , text: "กรุณาระบุประเภทหน่วยงาน!"
                 , icon: "warning"
             });
         } else if ($('#serviceDepartment').val() == '') {
@@ -425,8 +425,9 @@
                 , text: "กรุณาระบุวันที่ต้องการใช้บริการ!"
                 , icon: "warning"
             });
-        } else if (!($('#serviceProvider').length)) {
-            const selected = $('#serviceProvider').val();
+        // } else if (!($('#serviceProvider').length)) {
+        // const selected = $('#serviceProvider').val();
+        } else if ($('#serviceProvider').val() == '') {
             if (!selected || selected.length === 0) {
                 Swal.fire({
                     title: "แจ้งเตือน!"

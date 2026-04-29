@@ -111,8 +111,8 @@
                                         </div>
                                         <select name="departmentType" id="departmentType" class="form-control select2" required>
                                             <option value="">เลือก</option>
-                                            <option value="ภายในคณะวิทยาศาสตร์">ภายในคณะวิทยาศาสตร์</option>
-                                            <option value="ภายนอกคณะวิทยาศาสตร์">ภายนอกคณะวิทยาศาสตร์</option>
+                                            <option value="ภายในคณะวิทยาศาสตร์" {{ 'ภายในคณะวิทยาศาสตร์' == $serviceRequests->serviceDepartmentType ? 'selected' : '' }}>ภายในคณะวิทยาศาสตร์</option>
+                                            <option value="ภายนอกคณะวิทยาศาสตร์" {{ 'ภายนอกคณะวิทยาศาสตร์' == $serviceRequests->serviceDepartmentType ? 'selected' : '' }}>ภายนอกคณะวิทยาศาสตร์</option>
                                         </select>
                                     </div>
                                 </div>
@@ -183,8 +183,8 @@
                                         <select name="departmentType" id="departmentType"
                                             class="form-control form-control is-warning" required>
                                             <option value="">เลือก</option>
-                                        <option value="ภายในคณะวิทยาศาสตร์">ภายในคณะวิทยาศาสตร์</option>
-                                        <option value="ภายนอกคณะวิทยาศาสตร์">ภายนอกคณะวิทยาศาสตร์</option>
+                                            <option value="ภายในคณะวิทยาศาสตร์">ภายในคณะวิทยาศาสตร์</option>
+                                            <option value="ภายนอกคณะวิทยาศาสตร์">ภายนอกคณะวิทยาศาสตร์</option>
                                         </select>
                                     </div>
                                 </div>
@@ -227,11 +227,14 @@
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
                                         </div>
-                                        <select name="serviceProvider[]" id="serviceProvider"
+                                        <select name="serviceProvider" id="serviceProvider"
                                             class="form-control select2" {{ $serviceRequests->serviceRecipient != Auth()->user()->username ? 'disabled' : '' }} required>
                                             <option value="">เลือก</option>
                                             @foreach ($staffUsers as $staffUser)
-                                            <option value="{{ $staffUser->username }}">{{ $staffUser->name }}</option>
+                                            <option value="{{ $staffUser->username }}"
+                                                {{ $staffUser->username == $serviceRequests->serviceProvider ? 'selected' : '' }}>
+                                                {{ $staffUser->name }}
+                                            </option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -661,8 +664,9 @@
                     text: "กรุณาระบุวันที่ต้องการใช้บริการ!",
                     icon: "warning"
                 });
-            } else if (!($('#serviceProvider').length)) {
-                const selected = $('#serviceProvider').val();
+            // } else if (!($('#serviceProvider').length)) {
+            //     const selected = $('#serviceProvider').val();
+            } else if ($('#serviceProvider').val() == '') {
                 if (!selected || selected.length === 0) {
                     Swal.fire({
                         title: "แจ้งเตือน!",
